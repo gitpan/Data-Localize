@@ -1,0 +1,22 @@
+---
+abstract: 'Alternate Data Localization API'
+author:
+  - 'Daisuke Maki C<< <daisuke@endeworks.jp> >>'
+distribution_type: module
+generated_by: 'Module::Install version 0.79'
+license: unknown
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Data-Localize
+no_index:
+  directory:
+    - inc
+    - t
+    - t/lib
+requires:
+  I18N::LangTags: 0
+  Module::Pluggable::Object: 0
+  Moose: 0
+  MooseX::AttributeHelpers: 0
+version: 0.00001
