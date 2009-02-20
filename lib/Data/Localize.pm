@@ -1,7 +1,8 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 100697 2009-02-15T05:45:11.037750Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 100948 2009-02-20T04:07:52.965534Z daisuke  $
 
 package Data::Localize;
 use Moose;
+use Moose::Util::TypeConstraints;
 use MooseX::AttributeHelpers;
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
@@ -55,10 +56,36 @@ has 'fallback_languages' => (
 
 # Localizers are the actual minions that perform the localization.
 # They must register themselves
+subtype 'Data::Localize::LocalizerListArg'
+    => as 'ArrayRef'
+    => where {
+        ! grep { ! blessed $_ || ! $_->does('Data::Localize::Localizer') } @$_;
+    }
+    => message {
+        'localizers must be a list of Data::Localize::Localizer implementors'
+    }
+;
+coerce 'Data::Localize::LocalizerListArg'
+    => from 'ArrayRef[HashRef]'
+    => via {
+        my $ret = [ map {
+            my $args  = $_;
+            my $klass = delete $args->{class};
+            if ($klass !~ s/^\+//) {
+                $klass = "Data::Localize::$klass";
+            }
+            Class::MOP::load_class($klass);
+            $klass->new(%$args);
+        } @$_ ];
+        return $ret;
+    }
+;
+
 has 'localizers' => (
     metaclass => 'Collection::Array',
     is => 'rw',
-    isa => 'ArrayRef',
+    isa => 'Data::Localize::LocalizerListArg',
+    coerce => 1,
     default => sub { +[] },
     provides => {
         push => 'push_localizers',
@@ -80,6 +107,17 @@ has 'localizer_map' => (
 __PACKAGE__->meta->make_immutable;
 
 no Moose;
+no Moose::Util::TypeConstraints;
+
+sub BUILD {
+    my $self = shift;
+    if ($self->count_localizers > 0) {
+        foreach my $loc (@{ $self->localizers }) {
+            $loc->register($self);
+        }
+    }
+    return $self;
+}
 
 sub _build_fallback_languages {
     return [];
@@ -103,6 +141,18 @@ sub detect_languages {
     );
     if (&DEBUG) {
         print STDERR "[Data::Localize]: detect_languages auto-detected ", join(", ", map { "'$_'" } @lang ), "\n";
+    }
+    return wantarray ? @lang : \@lang;
+}
+
+sub detect_languages_from_header {
+    my $self = shift;
+    my @lang = I18N::LangTags::implicate_supers( 
+        I18N::LangTags::Detect->http_accept_langs( $_[0] || $ENV{HTTP_ACCEPT_LANGUAGE}),
+        $self->fallback_languages,
+    );
+    if (&DEBUG) {
+        print STDERR "[Data::Localize]: detect_languages_from_header detected ", join(", ", map { "'$_'" } @lang ), "\n";
     }
     return wantarray ? @lang : \@lang;
 }
@@ -324,8 +374,6 @@ Used internally.
 If used without any arguments, calls detect_languages() and sets the
 current language set to the result of detect_languages().
 
-Actuall
-
 =head1 TODO
 
 Gettext style localization files -- Make it possible to decode them
@@ -335,6 +383,31 @@ Check performance -- see benchmark/benchmark.pl
 
 Daisuke Maki C<< <daisuke@endeworks.jp> >>
 
-Parts of this code stolen from Locale::Maketext::Lexicon::Gettext.
+=head1 COPYRIGHT
+
+=over 4
+
+=item The "MIT" License
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=back
 
 =cut
