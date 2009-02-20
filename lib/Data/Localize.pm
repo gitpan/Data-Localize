@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 100948 2009-02-20T04:07:52.965534Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 100966 2009-02-20T06:44:43.691737Z daisuke  $
 
 package Data::Localize;
 use Moose;
@@ -88,8 +88,9 @@ has 'localizers' => (
     coerce => 1,
     default => sub { +[] },
     provides => {
-        push => 'push_localizers',
-        count => 'count_localizers',
+        'push'  => 'push_localizers',
+        'count' => 'count_localizers',
+        'grep'  => 'grep_localizers',
     }
 );
 
@@ -231,6 +232,14 @@ sub add_localizer {
     $self->push_localizers($localizer);
 }
 
+sub find_localizers {
+    my ($self, %args) = @_;
+
+    if (my $isa = $args{isa}) {
+        return $self->grep_localizers(sub { $_[0]->isa($isa) });
+    }
+}
+
 sub add_localizer_map {
     my ($self, $lang, $localizer) = @_;
 
@@ -368,6 +377,12 @@ I18N::LanguageTags::Detect for details.
 =head2 add_localizer_map
 
 Used internally.
+
+=head2 find_localizers 
+
+Finds a localizer by its attribute. Currently only supports isa
+
+    my @locs = $loc->find_localizers(isa => 'Data::Localize::Gettext');
 
 =head2 set_languages
 
