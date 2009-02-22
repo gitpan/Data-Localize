@@ -12,5 +12,6 @@ requires 'I18N::LangTags';
 no_index directory => 't/lib';
 
 auto_include_deps;
+no_index directory => 'tools';
 
 WriteAll;

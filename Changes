@@ -1,0 +1,18 @@
+Changes
+=======
+
+0.00002 22 Feb 2009
+  * Change the eval call, to see if we can trap failures like this
+    http://www.nntp.perl.org/group/perl.cpan.testers/2009/02/msg3321095.html
+  * Remove Data::Dumper from debug output
+  * Clear %ENV so that I18N::LangTags doesn't pick up the system language
+
+0.00001 20 Feb 2009
+  * Add find_localizers()
+
+0.00001_02 20 Feb 2009
+  * Handle 'localizers' in the constructor
+  * Add (stole) metadata parsing for Gettext
+
+0.00001_01 15 Feb 2009
+  * Initial release

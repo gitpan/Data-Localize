@@ -1,6 +1,7 @@
 use strict;
 use lib "t/lib";
 use Test::More (tests => 2);
+use Test::Data::Localize;
 
 use_ok "Data::Localize";
 

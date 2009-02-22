@@ -4,6 +4,7 @@ use utf8;
 use File::Spec;
 use File::Temp qw(tempdir);
 use Test::More tests => 5;
+use Test::Data::Localize;
 
 use_ok "Data::Localize";
 use_ok "Data::Localize::Gettext";

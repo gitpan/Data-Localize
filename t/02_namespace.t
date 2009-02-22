@@ -2,6 +2,7 @@ use strict;
 use lib "t/lib";
 use utf8;
 use Test::More tests => 6;
+use Test::Data::Localize;
 
 use_ok "Data::Localize";
 use_ok "Data::Localize::Namespace";

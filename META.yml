@@ -14,9 +14,10 @@ no_index:
     - inc
     - t
     - t/lib
+    - tools
 requires:
   I18N::LangTags: 0
   Module::Pluggable::Object: 0
   Moose: 0
   MooseX::AttributeHelpers: 0
-version: 0.00001
+version: 0.00002
