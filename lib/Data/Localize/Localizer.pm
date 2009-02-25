@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Localizer.pm 100948 2009-02-20T04:07:52.965534Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Localizer.pm 101218 2009-02-25T02:02:15.995644Z daisuke  $
 
 package Data::Localize::Localizer;
 use utf8;
@@ -36,9 +36,9 @@ sub format_string {
     my $style = $self->style;
 print STDERR "$self -> localizing '$value' with (@args), style is $style\n" if Data::Localize::DEBUG();
     if ($style eq 'gettext') {
-        $value =~ s/%(\d+)/ $args[$1 - 1] || '' /ge;
+        $value =~ s/%(\d+)/ defined $args[$1 - 1] ? $args[$1 - 1] : '' /ge;
     } elsif ($style eq 'maketext') {
-        $value =~ s/\[_(\d+)\]/$args[$1 - 1] || ''/ge;
+        $value =~ s/\[_(\d+)\]/defined $args[$1 - 1] ? $args[$1 - 1] : ''/ge;
     } else {
         confess "Unknown style: $style";
     }

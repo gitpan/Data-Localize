@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101112 2009-02-22T01:16:35.572508Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101228 2009-02-25T03:44:32.140503Z daisuke  $
 
 package Data::Localize;
 use Moose;
@@ -7,7 +7,7 @@ use MooseX::AttributeHelpers;
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.00002';
+our $VERSION = '0.00003';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -189,7 +189,7 @@ sub localize {
             }
             my $out = $localizer->localize_for(
                 lang => $lang,
-                id => $key,
+                id   => $key,
                 args => \@args
             );
             if ($out) {
@@ -205,6 +205,9 @@ sub localize {
     # if you got here, and you /still/ can't find a proper localization,
     # then we fallback to 'auto' feature
     if ($self->auto) {
+        if (DEBUG) {
+            print STDERR "[Data::Localize]: localize - trying auto-lexicon for $key\n";
+        }
         return $self->auto_localizer->localize_for(id => $key, args => \@args);
     }
 
