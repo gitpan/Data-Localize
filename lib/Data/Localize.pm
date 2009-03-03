@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101228 2009-02-25T03:44:32.140503Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101684 2009-03-03T15:17:38.309745Z daisuke  $
 
 package Data::Localize;
 use Moose;
@@ -7,7 +7,7 @@ use MooseX::AttributeHelpers;
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.00003';
+our $VERSION = '0.00004';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -376,6 +376,10 @@ Localize the given string ID, using provided variables.
 Detects the current set of languages to use. If used in an CGI environment,
 will attempt to detect the language of choice from headers. See
 I18N::LanguageTags::Detect for details.
+
+=head2 detect_languages_from_header 
+
+Detects the language from the given header value, or from HTTP_ACCEPT_LANGUAGES environment variable
 
 =head2 add_localizer_map
 

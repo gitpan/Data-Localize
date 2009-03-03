@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 100948 2009-02-20T04:07:52.965534Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 101683 2009-03-03T15:16:28.102624Z daisuke  $
 
 package Data::Localize::Gettext;
 use utf8;
@@ -216,6 +216,10 @@ Loads lexicons from specified path. May contain glob()'able expressions.
 =head2 register
 
 Registeres this localizer
+
+=head2 parse_metadata
+
+Parse meta data information in .po file
 
 =head1 UTF8 
 

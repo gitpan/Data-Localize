@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.00004 04 Mar 2009
+  * Silence a minor warning
+  * Fix up POD tests
+
 0.00003 25 Feb 2009
   * format_string() was not properly formatting for cases where the argument
     was a logical false, such as 0. This has been fixed, but note that undef

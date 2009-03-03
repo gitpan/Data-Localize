@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 101110 2009-02-22T01:11:10.067385Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 101681 2009-03-03T15:12:02.559506Z daisuke  $
 
 package Data::Localize::Namespace;
 use Moose;
@@ -62,7 +62,9 @@ sub lexicon_get {
                 if (&Data::Localize::DEBUG) {
                     print STDERR "[Data::Localize::Namespace]: lexicon_get - loading $klass\n";
                 }
-                eval "\n#line " . __LINE__ . ' "' . __FILE__ . "\"\nrequire $klass ";
+
+                my $code = "\n#line " . __LINE__ . ' "' . __FILE__ . "\"\nrequire $klass";
+                eval $code;
                 if ($@) {
                     if (&Data::Localize::DEBUG) {
                         print STDERR "[Data::Localize::Namespace]: lexicon_get - Failed to load $klass: $@\n";
