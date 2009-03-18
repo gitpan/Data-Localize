@@ -1,13 +1,13 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101684 2009-03-03T15:17:38.309745Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101885 2009-03-07T09:16:11.248286Z daisuke  $
 
 package Data::Localize;
-use Moose;
-use Moose::Util::TypeConstraints;
-use MooseX::AttributeHelpers;
+use Any::Moose;
+use Any::Moose '::Util::TypeConstraints';
+use Any::Moose 'X::AttributeHelpers';
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.00004';
+our $VERSION = '0.00005';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -74,7 +74,7 @@ coerce 'Data::Localize::LocalizerListArg'
             if ($klass !~ s/^\+//) {
                 $klass = "Data::Localize::$klass";
             }
-            Class::MOP::load_class($klass);
+            Any::Moose::load_class($klass);
             $klass->new(%$args);
         } @$_ ];
         return $ret;
@@ -107,8 +107,8 @@ has 'localizer_map' => (
 
 __PACKAGE__->meta->make_immutable;
 
-no Moose;
-no Moose::Util::TypeConstraints;
+no Any::Moose;
+no Any::Moose '::Util::TypeConstraints';
 
 sub BUILD {
     my $self = shift;
@@ -226,7 +226,7 @@ sub add_localizer {
         if ($klass !~ s/^\+//) {
             $klass = "Data::Localize::$klass";
         }
-        Class::MOP::load_class($klass);
+        Any::Moose::load_class($klass);
 
         $localizer = $klass->new(%args);
     }
@@ -267,9 +267,9 @@ Data::Localize - Alternate Data Localization API
 
 =head1 SYNOPSIS
 
-    use Data::Localizer;
+    use Data::Localize;
 
-    my $loc = Data::Localizer->new();
+    my $loc = Data::Localize->new();
     $loc->add_localizer(
         class     => "Namespace", # Locale::Maketext-style .pm files
         namespace => "MyApp::I18N"
@@ -323,7 +323,7 @@ which allows you to pass a non-existing key to the localize() method, and
 use it as the actual lexicon, if no other applicable lexicons exists.
 
     # here, we're deliberately not setting any localizers
-    my $loc = Data::Localizer->new(auto => 1);
+    my $loc = Data::Localize->new(auto => 1);
 
     print $loc->localize('Hello, [_1]', 'John Doe'), "\n";
 

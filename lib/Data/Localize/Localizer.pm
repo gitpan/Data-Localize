@@ -1,9 +1,9 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Localizer.pm 101218 2009-02-25T02:02:15.995644Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Localizer.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
 
 package Data::Localize::Localizer;
 use utf8;
-use Moose::Role;
-use Moose::Util::TypeConstraints;
+use Any::Moose '::Role';
+use Any::Moose '::Util::TypeConstraints';
 
 requires 'register';
 
@@ -12,9 +12,6 @@ has 'style' => (
     isa => enum([qw(gettext maketext)]),
     default => 'maketext',
 );
-
-no Moose::Role;
-no Moose::Util::TypeConstraints;
 
 sub localize_for {
     my ($self, %args) = @_;
@@ -44,6 +41,9 @@ print STDERR "$self -> localizing '$value' with (@args), style is $style\n" if D
     }
     return $value;
 }
+
+no Any::Moose '::Role';
+no Any::Moose '::Util::TypeConstraints';
 
 1;
 

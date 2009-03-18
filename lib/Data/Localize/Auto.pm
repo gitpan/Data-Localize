@@ -1,13 +1,13 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Auto.pm 100948 2009-02-20T04:07:52.965534Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Auto.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
 
 package Data::Localize::Auto;
-use Moose;
+use Any::Moose;
 
 with 'Data::Localize::Localizer';
 
 __PACKAGE__->meta->make_immutable;
 
-no Moose;
+no Any::Moose;
 
 sub register {}
 

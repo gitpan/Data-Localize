@@ -1,8 +1,8 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 101681 2009-03-03T15:12:02.559506Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
 
 package Data::Localize::Namespace;
-use Moose;
-use MooseX::AttributeHelpers;
+use Any::Moose;
+use Any::Moose 'X::AttributeHelpers';
 use Module::Pluggable::Object;
 use Encode ();
 
@@ -20,7 +20,7 @@ has 'namespaces' => (
 
 __PACKAGE__->meta->make_immutable;
 
-no Moose;
+no Any::Moose;
 
 sub register {
     my ($self, $loc) = @_;

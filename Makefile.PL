@@ -4,10 +4,15 @@ use inc::Module::Install;
 name('Data-Localize');
 all_from('lib/Data/Localize.pm');
 
-requires 'Moose';
-requires 'MooseX::AttributeHelpers';
+requires 'Any::Moose';
 requires 'Module::Pluggable::Object';
 requires 'I18N::LangTags';
+requires_any_moose 'mouse' => '0.19';
+requires_any_moose 'X::AttributeHelpers' => (
+    prefer => 'Mouse',
+    moose  => '0.13',
+    mouse  => '0.01',
+);
 
 no_index directory => 't/lib';
 

@@ -3,7 +3,7 @@ abstract: 'Alternate Data Localization API'
 author:
   - 'Daisuke Maki C<< <daisuke@endeworks.jp> >>'
 distribution_type: module
-generated_by: 'Module::Install version 0.79'
+generated_by: 'Module::Install version 0.80'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -15,9 +15,13 @@ no_index:
     - t
     - t/lib
     - tools
+recommends:
+  Moose: 0
+  MooseX::AttributeHelpers: 0.13
 requires:
+  Any::Moose: 0
   I18N::LangTags: 0
   Module::Pluggable::Object: 0
-  Moose: 0
-  MooseX::AttributeHelpers: 0
-version: 0.00004
+  Mouse: 0.19
+  MouseX::AttributeHelpers: 0.01
+version: 0.00005

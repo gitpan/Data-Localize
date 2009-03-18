@@ -1,10 +1,10 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 101683 2009-03-03T15:16:28.102624Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
 
 package Data::Localize::Gettext;
 use utf8;
 use Encode ();
-use Moose;
-use MooseX::AttributeHelpers;
+use Any::Moose;
+use Any::Moose 'X::AttributeHelpers';
 use File::Basename ();
 
 with 'Data::Localize::Localizer';
@@ -13,12 +13,13 @@ has 'encoding' => (
     is => 'rw',
     isa => 'Str',
     default => 'utf-8',
+    lazy => 1,
 );
 
 has 'paths' => (
     metaclass => 'Collection::Array',
     is => 'rw',
-    isa => 'ArrayRef[Str]',
+    isa => 'ArrayRef',
     trigger => sub {
         my $self = shift;
         $self->load_from_path($_) for @{$_[0]}
@@ -46,7 +47,7 @@ has 'lexicon' => (
 
 __PACKAGE__->meta->make_immutable;
 
-no Moose;
+no Any::Moose;
 
 sub BUILDARGS {
     my ($class, %args) = @_;

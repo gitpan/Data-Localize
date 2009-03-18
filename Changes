@@ -1,6 +1,9 @@
 Changes
 =======
 
+0.00005 09 Mar 2009
+  * Any::Moose me! Requires MouseX::AttributeHandlers and Mouse 0.19
+
 0.00004 04 Mar 2009
   * Silence a minor warning
   * Fix up POD tests
