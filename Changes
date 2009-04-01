@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.00006_01 25 Mar 2009
+  * Add a storage backend. This is mainly to cover cases where storing
+    many lexicons on memory is not a practical choice
+  * API change: lexicon_get() now accepts 2 arguments, and expects
+    the translated lexicon back
+
 0.00005 09 Mar 2009
   * Any::Moose me! Requires MouseX::AttributeHandlers and Mouse 0.19
 

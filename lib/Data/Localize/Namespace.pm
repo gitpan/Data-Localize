@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 103044 2009-04-01T01:17:04.738082Z daisuke  $
 
 package Data::Localize::Namespace;
 use Any::Moose;
@@ -41,7 +41,7 @@ sub register {
 
 our %LOADED;
 sub lexicon_get {
-    my ($self, $lang) = @_;
+    my ($self, $lang, $id) = @_;
 
     foreach my $namespace ($self->namespaces) {
         my $klass = "$namespace\::$lang";
@@ -97,7 +97,7 @@ sub lexicon_get {
             %$h = ();
             %$h = %t;
         }
-        return $h;
+        return $h->{$id};
         
     }
     return ();

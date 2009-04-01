@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Auto.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Auto.pm 103047 2009-04-01T01:39:18.931794Z daisuke  $
 
 package Data::Localize::Auto;
 use Any::Moose;
@@ -10,6 +10,8 @@ __PACKAGE__->meta->make_immutable;
 no Any::Moose;
 
 sub register {}
+
+sub lexicon_get {}
 
 sub localize_for {
     my ($self, %args) = @_;
@@ -37,6 +39,8 @@ Data::Localize::Auto - Fallback Localizer
 =head1 METHODS
 
 =head2 register
+
+=head2 lexicon_get
 
 Does nothing
 

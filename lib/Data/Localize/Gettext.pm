@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 103048 2009-04-01T01:46:12.489728Z daisuke  $
 
 package Data::Localize::Gettext;
 use utf8;
@@ -6,6 +6,9 @@ use Encode ();
 use Any::Moose;
 use Any::Moose 'X::AttributeHelpers';
 use File::Basename ();
+use File::Spec;
+use File::Temp qw(tempdir);
+use Data::Localize::Storage::Hash;
 
 with 'Data::Localize::Localizer';
 
@@ -34,14 +37,28 @@ after 'path_add' => sub {
     $self->load_from_path($_) for @{ $self->paths };
 };
 
-has 'lexicon' => (
-    metaclass => 'Collection::Hash',
+has 'storage_class' => (
+    is => 'rw',
+    isa => 'Str',
+    default => sub {
+        return '+Data::Localize::Storage::Hash';
+    }
+);
+
+has 'storage_args' => (
     is => 'rw',
     isa => 'HashRef',
+    default => sub { +{} }
+);
+
+has 'lexicon_map' => (
+    metaclass => 'Collection::Hash',
+    is => 'rw',
+    isa => 'HashRef[Data::Localize::Storage]',
     default => sub { +{} },
     provides => {
-        get => 'lexicon_get',
-        set => 'lexicon_set'
+        get => 'lexicon_map_get',
+        set => 'lexicon_map_set'
     }
 );
 
@@ -161,14 +178,59 @@ my @fuzzy;
     $self->lexicon_merge($lang, \%lexicon);
 }
 
-sub lexicon_merge {
-    my ($self, $lang, $lexicon) = @_;
+sub lexicon_get {
+    my ($self, $lang, $id) = @_;
+    my $lexicon = $self->lexicon_map_get($lang);
+    return () unless $lexicon;
+    $lexicon->get($id);
+}
 
-    my $old = $self->lexicon_get($lang);
-    if ($old) {
-        $self->lexicon_set($lang, { %$old, %$lexicon });
+sub lexicon_set {
+    my ($self, $lang, $id, $value) = @_;
+    my $lexicon = $self->lexicon_map_get($lang);
+    if (! $lexicon) {
+        $lexicon = $self->build_storage();
+        $self->lexicon_map_set($lang, $lexicon);
+    }
+    $lexicon->set($id, $value);
+}
+
+sub lexicon_merge {
+    my ($self, $lang, $new_lexicon) = @_;
+
+    my $lexicon = $self->lexicon_map_get($lang);
+    if (! $lexicon) {
+        $lexicon = $self->_build_storage($lang);
+        $self->lexicon_map_set($lang, $lexicon);
+    }
+    while (my ($key, $value) = each %$new_lexicon) {
+        $lexicon->set($key, $value);
+    }
+}
+
+sub _build_storage {
+    my ($self, $lang) = @_;
+
+    my $class = $self->storage_class;
+    my $args  = $self->storage_args;
+    my %args;
+
+    if ($class !~ s/^\+//) {
+        $class = "Data::Localize::Storage::$class";
+    }
+    Any::Moose::load_class($class);
+
+    if ( $class->isa('Data::Localize::Storage::BerkeleyDB') ) {
+        my $dir  = ($args->{dir} ||= tempdir(CLEANUP => 1));
+        return $class->new(
+            bdb_class => 'Hash',
+            bdb_args  => {
+                -Filename => File::Spec->catfile($dir, $lang),
+                -Flags    => BerkeleyDB::DB_CREATE(),
+            }
+        );
     } else {
-        $self->lexicon_set($lang, $lexicon);
+        return $class->new();
     }
 }
 
@@ -201,6 +263,14 @@ Data::Localize::Gettext - Acquire Lexicons From .po Files
 =head1 DESCRIPTION
 
 =head1 METHODS
+
+=head2 lexicon_get($lang, $id)
+
+Gets the specified lexicon
+
+=head2 lexicon_set($lang, $id, $value)
+
+Sets the specified lexicon
 
 =head2 lexicon_merge
 

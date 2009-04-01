@@ -24,4 +24,4 @@ requires:
   Module::Pluggable::Object: 0
   Mouse: 0.19
   MouseX::AttributeHelpers: 0.01
-version: 0.00005
+version: 0.00006_01

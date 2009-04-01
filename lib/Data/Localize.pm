@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 101885 2009-03-07T09:16:11.248286Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 103047 2009-04-01T01:39:18.931794Z daisuke  $
 
 package Data::Localize;
 use Any::Moose;
@@ -7,7 +7,7 @@ use Any::Moose 'X::AttributeHelpers';
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.00005';
+our $VERSION = '0.00006_01';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -335,6 +335,26 @@ don't have to place _AUTO everwhere.
 
 All data is expected to be in decoded utf8. You must "use utf8" for all values
 passed to Data::Localizer. We won't try to be smart for you. USE UTF8!
+
+=head1 USING ALTERNATE STORAGE
+
+By default all lexicons are stored on memory, but if you're building an app
+with thousands and thousands of long messages, this might not be the ideal
+solution. In such cases, you can change where the lexicons get stored
+
+    my $loc = Data::Localize->new();
+    $loc->add_namespace(
+        class         => 'Gettext',
+        path          => '/path/to/data/*.po'
+        storage_class => 'BerkeleyDB',
+        storage_args  => {
+            dir => '/path/to/really/fast/device'
+        }
+    );
+
+This would cause Data::Localize to put all the lexicon data in several BerkeleyDB files under /path/to/really/fast/device
+
+Note that this approach would buy you no gain if you use Data::Localize::Namespace, as that approach by default expects everything to be in memory.
 
 =head1 DEBUGGING
 

@@ -14,6 +14,9 @@ lib/Data/Localize/Auto.pm
 lib/Data/Localize/Gettext.pm
 lib/Data/Localize/Localizer.pm
 lib/Data/Localize/Namespace.pm
+lib/Data/Localize/Storage.pm
+lib/Data/Localize/Storage/BerkeleyDB.pm
+lib/Data/Localize/Storage/Hash.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml

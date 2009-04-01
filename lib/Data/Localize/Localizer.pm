@@ -1,11 +1,11 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Localizer.pm 101877 2009-03-07T05:37:41.706351Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Localizer.pm 103041 2009-04-01T01:14:35.183180Z daisuke  $
 
 package Data::Localize::Localizer;
 use utf8;
 use Any::Moose '::Role';
 use Any::Moose '::Util::TypeConstraints';
 
-requires 'register';
+requires 'register', 'lexicon_get';
 
 has 'style' => (
     is => 'rw',
@@ -17,8 +17,7 @@ sub localize_for {
     my ($self, %args) = @_;
     my ($lang, $id, $args) = @args{ qw(lang id args) };
 
-    my $lexicon = $self->lexicon_get($lang) or return ();
-    my $value = $lexicon->{ $id };
+    my $value = $self->lexicon_get($lang, $id) or return ();
     if (&Data::Localize::DEBUG) {
         print STDERR "[Data::Localize::Localizer]: localize_for - $id -> ",
             defined($value) ? $value : '(null)', "\n";
