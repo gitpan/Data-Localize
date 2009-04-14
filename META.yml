@@ -2,8 +2,12 @@
 abstract: 'Alternate Data Localization API'
 author:
   - 'Daisuke Maki C<< <daisuke@endeworks.jp> >>'
+build_requires:
+  ExtUtils::MakeMaker: 6.42
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.80'
+generated_by: 'Module::Install version 0.82'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -24,4 +28,6 @@ requires:
   Module::Pluggable::Object: 0
   Mouse: 0.19
   MouseX::AttributeHelpers: 0.01
-version: 0.00006_01
+resources:
+  license: http://opensource.org/licenses/mit-license.php
+version: 0.00006

@@ -1,6 +1,9 @@
 Changes
 =======
 
+0.00006 14 Apr 2009
+  * Properly cleanse $lang before using it as a namespace
+
 0.00006_01 25 Mar 2009
   * Add a storage backend. This is mainly to cover cases where storing
     many lexicons on memory is not a practical choice

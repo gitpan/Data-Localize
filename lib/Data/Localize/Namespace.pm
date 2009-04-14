@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 103044 2009-04-01T01:17:04.738082Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 103851 2009-04-14T06:21:48.827415Z daisuke  $
 
 package Data::Localize::Namespace;
 use Any::Moose;
@@ -43,6 +43,7 @@ our %LOADED;
 sub lexicon_get {
     my ($self, $lang, $id) = @_;
 
+    $lang =~ s/-/_/g;
     foreach my $namespace ($self->namespaces) {
         my $klass = "$namespace\::$lang";
         if (&Data::Localize::DEBUG) {
@@ -63,8 +64,12 @@ sub lexicon_get {
                     print STDERR "[Data::Localize::Namespace]: lexicon_get - loading $klass\n";
                 }
 
-                my $code = "\n#line " . __LINE__ . ' "' . __FILE__ . "\"\nrequire $klass";
-                eval $code;
+                my $code = 
+                    "\n" .
+                    "#line " . __LINE__ . ' "' . __FILE__ . '"' . "\n" .
+                    "require $klass;"
+                ;
+                eval($code);
                 if ($@) {
                     if (&Data::Localize::DEBUG) {
                         print STDERR "[Data::Localize::Namespace]: lexicon_get - Failed to load $klass: $@\n";

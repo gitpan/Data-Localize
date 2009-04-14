@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 103047 2009-04-01T01:39:18.931794Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 103847 2009-04-14T06:14:03.370948Z daisuke  $
 
 package Data::Localize;
 use Any::Moose;
@@ -7,7 +7,7 @@ use Any::Moose 'X::AttributeHelpers';
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.00006_01';
+our $VERSION = '0.00006';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {

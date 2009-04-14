@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 103048 2009-04-01T01:46:12.489728Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 103354 2009-04-04T17:50:24.380232Z daisuke  $
 
 package Data::Localize::Gettext;
 use utf8;
@@ -134,8 +134,12 @@ my @fuzzy;
 
         /^(msgid|msgstr) +"(.*)" *$/
             ? do {                          # leading strings
-            $var{$1} = $2;
             $key = $1;
+            my $x = $2;
+            $x =~ s/\\(n|\\)/
+                $1 eq 'n' ? "\n" :
+                            "\\" /gex;
+            $var{$key} = $x;
             }
             :
 
