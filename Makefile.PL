@@ -13,6 +13,7 @@ requires_any_moose 'X::AttributeHelpers' => (
     moose  => '0.13',
     mouse  => '0.01',
 );
+recommends 'BerkeleyDB';
 
 no_index directory => 't/lib';
 

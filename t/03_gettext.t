@@ -48,7 +48,11 @@ EOM
 
 }
 
-{
+SKIP: {
+    eval "require BerkeleyDB";
+    if ($@) {
+        skip("Test requires BerkeleyDB", 2);
+    }
     my $loc = Data::Localize->new(auto => 0, languages => [ 'ja' ]);
     $loc->add_localizer(
         class => 'Gettext',
