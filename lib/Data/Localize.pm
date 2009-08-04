@@ -1,5 +1,3 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize.pm 103912 2009-04-15T01:36:27.689102Z daisuke  $
-
 package Data::Localize;
 use Any::Moose;
 use Any::Moose '::Util::TypeConstraints';
@@ -7,7 +5,7 @@ use Any::Moose 'X::AttributeHelpers';
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.00007';
+our $VERSION = '0.00008';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -20,19 +18,25 @@ BEGIN {
     }
 }
 
-has 'auto' => (
+has auto => (
     is => 'rw',
     isa => 'Bool',
     default => 1,
 );
 
-has 'auto_localizer' => (
-    is => 'rw',
+has auto_style => (
+    is => 'ro',
+    isa => 'Str',
+    default => 'maketext'
+);
+
+has auto_localizer => (
+    is => 'ro',
     isa => 'Data::Localize::Auto',
     lazy_build => 1,
 );
 
-has 'languages' => (
+has languages => (
     metaclass => 'Collection::Array',
     is => 'rw',
     isa => 'ArrayRef',
@@ -43,7 +47,7 @@ has 'languages' => (
     }
 );
 
-has 'fallback_languages' => (
+has fallback_languages => (
     metaclass => 'Collection::Array',
     is => 'rw',
     isa => 'ArrayRef',
@@ -81,9 +85,9 @@ coerce 'Data::Localize::LocalizerListArg'
     }
 ;
 
-has 'localizers' => (
+has localizers => (
     metaclass => 'Collection::Array',
-    is => 'rw',
+    is => 'ro',
     isa => 'Data::Localize::LocalizerListArg',
     coerce => 1,
     default => sub { +[] },
@@ -94,9 +98,9 @@ has 'localizers' => (
     }
 );
 
-has 'localizer_map' => (
+has localizer_map => (
     metaclass => 'Collection::Hash',
-    is => 'rw',
+    is => 'ro',
     isa => 'HashRef',
     default => sub { +{} },
     provides => {
@@ -130,8 +134,9 @@ sub _build_languages {
 }
 
 sub _build_auto_localizer {
+    my $self = shift;
     require Data::Localize::Auto;
-    Data::Localize::Auto->new;
+    Data::Localize::Auto->new( style => $self->auto_style );
 }
 
 sub detect_languages {

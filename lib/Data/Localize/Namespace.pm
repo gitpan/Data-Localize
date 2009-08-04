@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Namespace.pm 103851 2009-04-14T06:21:48.827415Z daisuke  $
+# $Id: Namespace.pm 32372 2009-04-14 06:21:48Z daisuke $
 
 package Data::Localize::Namespace;
 use Any::Moose;

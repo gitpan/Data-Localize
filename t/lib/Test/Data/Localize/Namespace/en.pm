@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/t/lib/Test/Data/Localize/Namespace/en.pm 100685 2009-02-15T02:33:48.375991Z daisuke  $
+# $Id: en.pm 30071 2009-02-15 02:33:48Z daisuke $
 
 package Test::Data::Localize::Namespace::en;
 

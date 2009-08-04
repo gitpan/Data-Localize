@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Gettext.pm 103354 2009-04-04T17:50:24.380232Z daisuke  $
+# $Id: Gettext.pm 31909 2009-04-04 17:50:24Z daisuke $
 
 package Data::Localize::Gettext;
 use utf8;

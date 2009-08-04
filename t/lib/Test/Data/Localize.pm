@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/t/lib/Test/Data/Localize.pm 103043 2009-04-01T01:16:45.115159Z daisuke  $
+# $Id: Localize.pm 31764 2009-04-01 01:16:45Z daisuke $
 
 package Test::Data::Localize;
 

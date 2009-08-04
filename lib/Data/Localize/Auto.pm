@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/lib/Data/Localize/Auto.pm 103047 2009-04-01T01:39:18.931794Z daisuke  $
+# $Id: Auto.pm 31768 2009-04-01 01:39:18Z daisuke $
 
 package Data::Localize::Auto;
 use Any::Moose;

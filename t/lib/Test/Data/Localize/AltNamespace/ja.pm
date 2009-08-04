@@ -1,5 +1,5 @@
 
-# $Id: /mirror/coderepos/lang/perl/Data-Localize/trunk/t/lib/Test/Data/Localize/AltNamespace/ja.pm 100685 2009-02-15T02:33:48.375991Z daisuke  $
+# $Id: ja.pm 30071 2009-02-15 02:33:48Z daisuke $
 
 package Test::Data::Localize::AltNamespace::ja;
 
