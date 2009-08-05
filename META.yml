@@ -31,4 +31,4 @@ requires:
   MouseX::AttributeHelpers: 0.01
 resources:
   license: http://opensource.org/licenses/mit-license.php
-version: 0.00008
+version: 0.00009
