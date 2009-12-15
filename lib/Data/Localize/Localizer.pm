@@ -18,7 +18,7 @@ sub localize_for {
     my ($lang, $id, $args) = @args{ qw(lang id args) };
 
     my $value = $self->lexicon_get($lang, $id) or return ();
-    if (&Data::Localize::DEBUG) {
+    if (Data::Localize::DEBUG()) {
         print STDERR "[Data::Localize::Localizer]: localize_for - $id -> ",
             defined($value) ? $value : '(null)', "\n";
     }
@@ -33,7 +33,18 @@ sub format_string {
     if ($style eq 'gettext') {
         $value =~ s/%(\d+)/ defined $args[$1 - 1] ? $args[$1 - 1] : '' /ge;
     } elsif ($style eq 'maketext') {
-        $value =~ s/\[_(\d+)\]/defined $args[$1 - 1] ? $args[$1 - 1] : ''/ge;
+        $value =~ s|\[([^\]]+)\]|
+            my @vars = split(/,/, $1);
+            my $method;
+            if ($vars[0] !~ /^_(-?\d+)$/) {
+                $method = shift @vars;
+            }
+
+
+            ($method) ?
+                $self->$method( map { (/^_(-?\d+)$/) ? $args[$1 - 1] : $_; } @args ) :
+                @args[ map { (/^_(-?\d+)$/ ? $1 : $_) - 1 } @vars ];
+        |gex;
     } else {
         confess "Unknown style: $style";
     }

@@ -40,13 +40,22 @@ sub register {
 }
 
 our %LOADED;
+our %LOAD_FAILED;
 sub lexicon_get {
     my ($self, $lang, $id) = @_;
 
     $lang =~ s/-/_/g;
+
     foreach my $namespace ($self->namespaces) {
         my $klass = "$namespace\::$lang";
-        if (&Data::Localize::DEBUG) {
+
+        if ($LOAD_FAILED{ $klass }++) {
+            if (Data::Localize::DEBUG()) {
+                print STDERR "[Data::Localize::Namespace]: lexicon_get - Already attempted loading $klass and failed. Skipping...\n";
+            }
+        }
+
+        if (Data::Localize::DEBUG()) {
             print STDERR "[Data::Localize::Namespace]: lexicon_get - Trying $klass\n";
         }
 
@@ -56,11 +65,11 @@ sub lexicon_get {
         my $first_load = 0;
         if (! $LOADED{$klass}) {
             if (defined %{"$klass\::Lexicon"} && defined %{"$klass\::"}) {
-                if (&Data::Localize::DEBUG) {
+                if (Data::Localize::DEBUG()) {
                     print STDERR "[Data::Localize::Namespace]: lexicon_get - class already loaded\n";
                 }
             } else {
-                if (&Data::Localize::DEBUG) {
+                if (Data::Localize::DEBUG()) {
                     print STDERR "[Data::Localize::Namespace]: lexicon_get - loading $klass\n";
                 }
 
@@ -71,20 +80,21 @@ sub lexicon_get {
                 ;
                 eval($code);
                 if ($@) {
-                    if (&Data::Localize::DEBUG) {
+                    if (Data::Localize::DEBUG()) {
                         print STDERR "[Data::Localize::Namespace]: lexicon_get - Failed to load $klass: $@\n";
+                        $LOAD_FAILED{$klass}++;
                     }
                     next;
                 }
             }
-            if (&Data::Localize::DEBUG) {
+            if (Data::Localize::DEBUG()) {
                 print STDERR "[Data::Localize::Namespace]: lexicon_get - setting $klass to already loaded\n";
             }
             $LOADED{$klass}++;
             $first_load = 1;
         }
 
-        if (&Data::Localize::DEBUG) {
+        if (Data::Localize::DEBUG()) {
             print STDERR "[Data::Localize::Namespace]: returning lexicon from $klass (", scalar keys %{"$klass\::Lexicon"}, " lexicons)\n";
         }
         my $h = \%{ "$klass\::Lexicon" };

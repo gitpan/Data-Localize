@@ -22,8 +22,9 @@ MANIFEST			This list of files
 META.yml
 t/01_basic.t
 t/02_namespace.t
-t/03_gettext.t
-t/04_auto.t
+t/03_auto.t
+t/04_gettext.t
+t/05_maketext.t
 t/90_formfu.t
 t/99_pod-coverage.t
 t/99_pod.t

@@ -306,7 +306,6 @@ sub find_extensions {
 		$file = "$self->{path}/$subpath.pm";
 		my $pkg = "$self->{name}::$subpath";
 		$pkg =~ s!/!::!g;
-
 		# If we have a mixed-case package name, assume case has been preserved
 		# correctly.  Otherwise, root through the file to locate the case-preserved
 		# version of the package name.
