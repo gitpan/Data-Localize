@@ -5,7 +5,7 @@ use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 use 5.008;
 
-our $VERSION = '0.00012';
+our $VERSION = '0.00013';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -36,18 +36,18 @@ has auto_localizer => (
     lazy_build => 1,
 );
 
-has languages => (
+has _languages => (
     is => 'rw',
     isa => 'ArrayRef',
-    auto_deref => 1,
     lazy_build => 1,
+    init_arg => 'languages',
 );
 
-has fallback_languages => (
+has _fallback_languages => (
     is => 'rw',
     isa => 'ArrayRef',
-    auto_deref => 1,
     lazy_build => 1,
+    init_arg => 'languages',
 );
 
 # Localizers are the actual minions that perform the localization.
@@ -77,21 +77,18 @@ coerce 'Data::Localize::LocalizerListArg'
     }
 ;
 
-has localizers => (
-    is => 'ro',
+has _localizers => (
+    is => 'rw',
     isa => 'Data::Localize::LocalizerListArg',
     coerce => 1,
     default => sub { +[] },
+    init_arg => 'localizers',
 );
 
 has localizer_map => (
     is => 'ro',
     isa => 'HashRef',
     default => sub { +{} },
-    provides => {
-        get => 'get_localizer_from_lang',
-        set => 'set_localizer_map',
-    }
 );
 
 __PACKAGE__->meta->make_immutable;
@@ -102,18 +99,18 @@ no Any::Moose '::Util::TypeConstraints';
 sub BUILD {
     my $self = shift;
     if ($self->count_localizers > 0) {
-        foreach my $loc (@{ $self->localizers }) {
+        foreach my $loc (@{ $self->_localizers }) {
             $loc->register($self);
         }
     }
     return $self;
 }
 
-sub _build_fallback_languages {
-    return [];
+sub _build__fallback_languages {
+    return [ 'en' ];
 }
 
-sub _build_languages {
+sub _build__languages {
     my $self = shift;
     $self->detect_languages();
 }
@@ -124,29 +121,40 @@ sub _build_auto_localizer {
     Data::Localize::Auto->new( style => $self->auto_style );
 }
 
-sub add_languages {
+sub set_languages {
     my $self = shift;
-    push @{$self->languages}, @_;
-}
+    $self->_languages([ @_ > 0 ? @_ : $self->detect_languages ]);
+};
+
 
 sub add_fallback_languages {
     my $self = shift;
-    push @{$self->languages}, @_;
+    push @{$self->_fallback_languages}, @_;
 }
 
-sub push_localizers {
+sub fallback_languages {
     my $self = shift;
-    push @{$self->localizers}, @_;
+    return @{$self->_fallback_languages};
+}
+
+sub languages {
+    my $self = shift;
+    return @{$self->_languages};
+}
+
+sub localizers {
+    my $self = shift;
+    return $self->_localizers;
 }
 
 sub count_localizers {
     my $self = shift;
-    return scalar @{$self->localizers};
+    return scalar @{$self->_localizers};
 }
 
 sub grep_localizers {
     my ($self, $cb) = @_;
-    grep { $cb->($_) } @{$self->localizers};
+    grep { $cb->($_) } @{$self->_localizers};
 }
 
 sub get_localizer_from_lang {
@@ -181,11 +189,6 @@ sub detect_languages_from_header {
         print STDERR "[Data::Localize]: detect_languages_from_header detected ", join(", ", map { "'$_'" } @lang ), "\n";
     }
     return wantarray ? @lang : \@lang;
-}
-
-sub set_languages {
-    my $self = shift;
-    $self->languages([ @_ > 0 ? @_ : $self->detect_languages ]);
 }
 
 sub localize {
@@ -257,7 +260,7 @@ sub add_localizer {
     }
 
     $localizer->register($self);
-    $self->push_localizers($localizer);
+    push @{ $self->_localizers }, $localizer;
 }
 
 sub find_localizers {
@@ -347,19 +350,47 @@ Locale::Maketext allows you to supply an "_AUTO" key in the lexicon hash,
 which allows you to pass a non-existing key to the localize() method, and
 use it as the actual lexicon, if no other applicable lexicons exists.
 
-    # here, we're deliberately not setting any localizers
-    my $loc = Data::Localize->new(auto => 1);
-
-    print $loc->localize('Hello, [_1]', 'John Doe'), "\n";
-
 Locale::Maketext attaches this to the lexicon hash itself, but Data::Localizer
 differs in that it attaches to the Data::Localizer object itself, so you
 don't have to place _AUTO everwhere.
 
+    # here, we're deliberately not setting any localizers
+    my $loc = Data::Localize->new(auto => 1);
+
+    # previous auto => 1 will force Data::Localize to fallback to
+    # using the key ('Hello, [_1]') as the localization token.
+    print $loc->localize('Hello, [_1]', 'John Doe'), "\n";
+
 =head1 UTF8
 
-All data is expected to be in decoded utf8. You must "use utf8" for all values
+All data is expected to be in decoded utf8. You must "use utf8" or 
+decode them to Perl's internal representation for all values
 passed to Data::Localizer. We won't try to be smart for you. USE UTF8!
+
+=over 4
+
+=item Using Explicit decode()
+
+    use Encode q(decode decode_utf8);
+    use Data::Localizer;
+
+    my $loc = Data::Localize->new(...);
+
+    $loc->localize( $key, decode( 'iso-2022-jp', $value ) );
+
+    # if $value is encoded utf8...
+    # $loc->localize( $key, decode_utf8( $value ) );
+
+=item Using utf8
+
+"use utf8" is simpler, but do note that it will affect ALL your literal strings
+in the current scope
+
+    use utf8;
+
+    $loc->loclize( $key, "some-utf8-key-here" );
+
+=back
 
 =head1 USING ALTERNATE STORAGE
 
@@ -426,7 +457,15 @@ I18N::LanguageTags::Detect for details.
 
 Detects the language from the given header value, or from HTTP_ACCEPT_LANGUAGES environment variable
 
+=head2 localizers
+
+Return a arrayref of localizers
+
 =head2 add_localizer_map
+
+Used internally.
+
+=head2 set_localizer_map
 
 Used internally.
 
@@ -441,10 +480,36 @@ Finds a localizer by its attribute. Currently only supports isa
 If used without any arguments, calls detect_languages() and sets the
 current language set to the result of detect_languages().
 
+=head2 languages
+
+Getht the current list of languages
+
+=head2 add_fallback_languages
+
+=head2 fallback_languages
+
+XXX - Consider if fallback_languages can be removed
+
+=head2 count_localizers()
+
+Return the number of localizers available
+
+=head2 get_localizer_from_lang($lang)
+
+Get appropriate localizer for language $lang
+
+=head2 grep_localizers(\&sub)
+
+Filter localizers
+
 =head1 TODO
 
 Gettext style localization files -- Make it possible to decode them
 Check performance -- see benchmark/benchmark.pl
+
+=head1 CONTRIBUTORS
+
+Dave Rolsky
 
 =head1 AUTHOR
 

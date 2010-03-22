@@ -1,6 +1,25 @@
 Changes
 =======
 
+0.00013 23 Mar 2010
+  * Change all_* accessors back to what they were in 0.00011
+  * Separate out BerkeleyDB tests, fix them
+  * Namespace.pm no longer attempts to load files which failed to
+    load previously. If you want to reflect changes, you need to
+    recreate the object.
+  * DEPRECATION WARNING!
+    - Gettext.pm
+        * path_add        -> add_path
+        * lexicon_get     -> get_lexicon
+        * lexicon_set     -> set_lexicon
+        * lexicon_merge   -> merge_lexicon
+        * lexicon_map_get -> get_lexicon_map
+        * lexicon_map_set -> set_lexicon_map
+    - Namespace.pm
+        * lexicon_get     -> get_lexicon
+    - Auto.pm
+        * lexicon_get     -> get_lexicon
+
 0.00012 22 Mar 2010
   * Remove the use of AttributeHelpers -- doing this in Moose/Mouse is a pain
   * Move POD tests to xt

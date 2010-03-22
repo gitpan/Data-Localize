@@ -1,34 +1,27 @@
 package Data::Localize::Gettext::Parser;
 use Any::Moose;
-use namespace::autoclean;
 
-has 'encoding' => (
-    is       => 'rw',
+has encoding => (
+    is       => 'ro',
     isa      => 'Str',
     required => 1,
 );
 
-has 'use_fuzzy' => (
+has use_fuzzy => (
     is       => 'ro',
     isa      => 'Bool',
     required => 1,
 );
 
-has 'keep_empty' => (
+has keep_empty => (
     is       => 'ro',
     isa      => 'Bool',
     required => 1,
 );
 
-has '_lexicon' => (
-    is => 'rw',
-    isa => 'HashRef',
-);
+no Any::Moose;
 
-has '_msgids' => (
-    is => 'rw',
-    isa => 'HashRef',
-);
+__PACKAGE__->meta->make_immutable();
 
 sub parse_file {
     my ($self, $file) = @_;
@@ -36,15 +29,13 @@ sub parse_file {
     my $enc = ':encoding(' . $self->encoding . ')';
     open(my $fh, "<$enc", $file) or die "Could not open $file: $!";
 
-    $self->_lexicon( {} );
-
     my @block = ();
-
+    my %lexicons;
     while ( defined( my $line = <$fh> ) ) {
         $line =~ s/[\015\012]*\z//;                  # fix CRLF issues
 
         if ( $line =~ /^\s*$/ ) {
-            $self->_process_block(\@block) if @block;
+            $self->_process_block(\@block, \%lexicons) if @block;
             @block = ();
             next;
         }
@@ -52,13 +43,13 @@ sub parse_file {
         push @block, $line;
     }
 
-    $self->_process_block(\@block) if @block;
+    $self->_process_block(\@block, \%lexicons) if @block;
 
-    return $self->_lexicon();
+    return \%lexicons;
 }
 
 sub _process_block {
-    my ($self, $block) = @_;
+    my ($self, $block, $lexicons) = @_;
 
     my $msgid = q{};
     my $msgstr = q{};
@@ -98,9 +89,29 @@ sub _process_block {
 
     s/\\(n|\\)/$1 eq 'n' ? "\n" : "\\" /ge for $msgid, $msgstr;
 
-    $self->_lexicon()->{$msgid} = $msgstr;
+    $lexicons->{$msgid} = $msgstr;
 
     return;
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Data::Localize::Gettext::Parser - .po Parser 
+
+=head1 SYNOPSIS
+
+    use Data::Localize::Gettext::Parser;
+    my $p = Data::Localize::Gettext::Parser->new();
+    my $lexicons = $p->parse_file( $file );
+
+=head1 METHODS
+
+=head2 parse_file( $file )
+
+Parses a .po file, and returns the lexicons that are defined
+
+=cut

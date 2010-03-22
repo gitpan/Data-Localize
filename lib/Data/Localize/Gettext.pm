@@ -2,22 +2,24 @@
 package Data::Localize::Gettext;
 use utf8;
 use Any::Moose;
+use Carp ();
 use Data::Localize::Gettext::Parser;
 use File::Basename ();
 use File::Spec;
 use File::Temp qw(tempdir);
+use Data::Localize::Util qw(_alias_and_deprecate);
 use Data::Localize::Storage::Hash;
 
 with 'Data::Localize::Localizer';
 
 has 'encoding' => (
-    is => 'rw',
+    is => 'ro',
     isa => 'Str',
     default => 'utf-8',
 );
 
 has 'paths' => (
-    is => 'rw',
+    is => 'ro',
     isa => 'ArrayRef',
     trigger => sub {
         my $self = shift;
@@ -26,7 +28,7 @@ has 'paths' => (
 );
 
 has 'storage_class' => (
-    is => 'rw',
+    is => 'ro',
     isa => 'Str',
     default => sub {
         return '+Data::Localize::Storage::Hash';
@@ -34,13 +36,13 @@ has 'storage_class' => (
 );
 
 has 'storage_args' => (
-    is => 'rw',
+    is => 'ro',
     isa => 'HashRef',
     default => sub { +{} }
 );
 
 has 'lexicon_map' => (
-    is => 'rw',
+    is => 'ro',
     isa => 'HashRef[Data::Localize::Storage]',
     default => sub { +{} },
 );
@@ -57,8 +59,6 @@ has 'allow_empty' => (
     default => 0,
 );
 
-__PACKAGE__->meta->make_immutable;
-
 no Any::Moose;
 
 sub BUILDARGS {
@@ -72,18 +72,18 @@ sub BUILDARGS {
     $class->SUPER::BUILDARGS(%args, style => 'gettext');
 }
 
-sub path_add {
+sub add_path {
     my $self = shift;
-    push @{$self->{paths}}, @_;
+    push @{$self->paths}, @_;
     $self->load_from_path($_) for @_;
 }
 
-sub lexicon_map_get {
+sub get_lexicon_map {
     my ($self, $key) = @_;
     return $self->lexicon_map->{ $key };
 }
 
-sub lexicon_map_set {
+sub set_lexicon_map {
     my ($self, $key, $value) = @_;
     return $self->lexicon_map->{ $key } = $value;
 }
@@ -91,7 +91,6 @@ sub lexicon_map_set {
 sub register {
     my ($self, $loc) = @_;
     $loc->add_localizer_map('*', $self);
-
 }
 
 sub load_from_path {
@@ -132,7 +131,7 @@ sub load_from_file {
     }
 
     # This needs to be merged
-    $self->lexicon_merge($lang, $lexicon);
+    $self->merge_lexicon($lang, $lexicon);
 }
 
 sub format_string {
@@ -151,35 +150,35 @@ sub _method {
     my @embedded_args = split /,/, $embedded;
     my $code = $self->can($method);
     if (! $code) {
-        confess(blessed $self . " does not implement method $method");
+        Carp::confess(blessed $self . " does not implement method $method");
     }
     return $code->($self, $args, \@embedded_args );
 }
 
-sub lexicon_get {
+sub get_lexicon {
     my ($self, $lang, $id) = @_;
-    my $lexicon = $self->lexicon_map_get($lang);
+    my $lexicon = $self->get_lexicon_map($lang);
     return () unless $lexicon;
     $lexicon->get($id);
 }
 
-sub lexicon_set {
+sub set_lexicon {
     my ($self, $lang, $id, $value) = @_;
-    my $lexicon = $self->lexicon_map_get($lang);
+    my $lexicon = $self->get_lexicon_map($lang);
     if (! $lexicon) {
         $lexicon = $self->build_storage();
-        $self->lexicon_map_set($lang, $lexicon);
+        $self->set_lexicon_map($lang, $lexicon);
     }
     $lexicon->set($id, $value);
 }
 
-sub lexicon_merge {
+sub merge_lexicon {
     my ($self, $lang, $new_lexicon) = @_;
 
-    my $lexicon = $self->lexicon_map_get($lang);
+    my $lexicon = $self->get_lexicon_map($lang);
     if (! $lexicon) {
         $lexicon = $self->_build_storage($lang);
-        $self->lexicon_map_set($lang, $lexicon);
+        $self->set_lexicon_map($lang, $lexicon);
     }
     while (my ($key, $value) = each %$new_lexicon) {
         $lexicon->set($key, $value);
@@ -212,6 +211,15 @@ sub _build_storage {
     }
 }
 
+_alias_and_deprecate path_add => 'add_path';
+_alias_and_deprecate lexicon_map_get => 'get_lexicon_map';
+_alias_and_deprecate lexicon_map_set => 'set_lexicon_map';
+_alias_and_deprecate lexicon_get => 'get_lexicon';
+_alias_and_deprecate lexicon_set => 'set_lexicon';
+_alias_and_deprecate lexicon_merge => 'merge_lexicon';
+
+__PACKAGE__->meta->make_immutable;
+
 1;
 
 __END__
@@ -224,17 +232,33 @@ Data::Localize::Gettext - Acquire Lexicons From .po Files
 
 =head1 METHODS
 
-=head2 lexicon_get($lang, $id)
+=head2 format_string($value, @args)
+
+Formats the string
+
+=head2 add_path($path, ...)
+
+Adds a new path where .po files may be searched for.
+
+=head2 get_lexicon($lang, $id)
 
 Gets the specified lexicon
 
-=head2 lexicon_set($lang, $id, $value)
+=head2 set_lexicon($lang, $id, $value)
 
 Sets the specified lexicon
 
-=head2 lexicon_merge
+=head2 merge_lexicon
 
 Merges lexicon (may change...)
+
+=head2 get_lexicon_map($lang)
+
+Get the lexicon map for language $lang
+
+=head2 set_lexicon_map($lang, \%lexicons)
+
+Set the lexicon map for language $lang
 
 =head2 load_from_file
 

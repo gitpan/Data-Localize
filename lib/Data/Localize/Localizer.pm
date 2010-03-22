@@ -1,23 +1,26 @@
-# $Id: Localizer.pm 31762 2009-04-01 01:14:35Z daisuke $
 
 package Data::Localize::Localizer;
 use utf8;
 use Any::Moose '::Role';
 use Any::Moose '::Util::TypeConstraints';
+use Carp ();
 
-requires 'register', 'lexicon_get';
+requires 'register', 'get_lexicon';
 
 has 'style' => (
-    is => 'rw',
+    is => 'ro',
     isa => enum([qw(gettext maketext)]),
     default => 'maketext',
 );
+
+no Any::Moose '::Role';
+no Any::Moose '::Util::TypeConstraints';
 
 sub localize_for {
     my ($self, %args) = @_;
     my ($lang, $id, $args) = @args{ qw(lang id args) };
 
-    my $value = $self->lexicon_get($lang, $id) or return ();
+    my $value = $self->get_lexicon($lang, $id) or return ();
     if (Data::Localize::DEBUG()) {
         print STDERR "[Data::Localize::Localizer]: localize_for - $id -> ",
             defined($value) ? $value : '(null)', "\n";
@@ -46,13 +49,10 @@ sub format_string {
                 @args[ map { (/^_(-?\d+)$/ ? $1 : $_) - 1 } @vars ];
         |gex;
     } else {
-        confess "Unknown style: $style";
+        Carp::confess("Unknown style: $style");
     }
     return $value;
 }
-
-no Any::Moose '::Role';
-no Any::Moose '::Util::TypeConstraints';
 
 1;
 

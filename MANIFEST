@@ -8,9 +8,11 @@ inc/Module/Install/Fetch.pm
 inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/Repository.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 inc/Test/Builder/Module.pm
+inc/Test/More.pm
 inc/Test/Requires.pm
 lib/Data/Localize.pm
 lib/Data/Localize/Auto.pm
@@ -21,6 +23,7 @@ lib/Data/Localize/Namespace.pm
 lib/Data/Localize/Storage.pm
 lib/Data/Localize/Storage/BerkeleyDB.pm
 lib/Data/Localize/Storage/Hash.pm
+lib/Data/Localize/Util.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
@@ -28,13 +31,17 @@ t/01_basic.t
 t/02_namespace.t
 t/03_auto.t
 t/04_gettext.t
+t/04_gettext/ja.po
 t/05_maketext.t
+t/06_bdb.t
+t/07_gettext_parser.t
 t/90_formfu.t
-t/lib/Test/Data/Localize.pm
-t/lib/Test/Data/Localize/AltNamespace/ja.pm
-t/lib/Test/Data/Localize/Gettext/ja.po
-t/lib/Test/Data/Localize/Namespace/en.pm
-t/lib/Test/Data/Localize/Namespace/ja.pm
+t/Data/Localize/Test.pm
+t/Data/Localize/Test/AltNamespace/ja.pm
+t/Data/Localize/Test/Namespace/en.pm
+t/Data/Localize/Test/Namespace/ja.pm
 tools/benchmark/benchmark.pl
+xt/01_moose.t
+xt/02_mouse.t
 xt/99_pod-coverage.t
 xt/99_pod.t

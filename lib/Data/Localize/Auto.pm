@@ -1,4 +1,3 @@
-# $Id: Auto.pm 31768 2009-04-01 01:39:18Z daisuke $
 
 package Data::Localize::Auto;
 use Any::Moose;
@@ -11,7 +10,7 @@ no Any::Moose;
 
 sub register {}
 
-sub lexicon_get {}
+sub get_lexicon {}
 
 sub localize_for {
     my ($self, %args) = @_;
@@ -40,7 +39,7 @@ Data::Localize::Auto - Fallback Localizer
 
 =head2 register
 
-=head2 lexicon_get
+=head2 get_lexicon
 
 Does nothing
 
