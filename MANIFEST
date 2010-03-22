@@ -1,6 +1,7 @@
 Changes
 inc/Module/Install.pm
 inc/Module/Install/Any/Moose.pm
+inc/Module/Install/AuthorTests.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
@@ -9,9 +10,12 @@ inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
+inc/Test/Builder/Module.pm
+inc/Test/Requires.pm
 lib/Data/Localize.pm
 lib/Data/Localize/Auto.pm
 lib/Data/Localize/Gettext.pm
+lib/Data/Localize/Gettext/Parser.pm
 lib/Data/Localize/Localizer.pm
 lib/Data/Localize/Namespace.pm
 lib/Data/Localize/Storage.pm
@@ -26,11 +30,11 @@ t/03_auto.t
 t/04_gettext.t
 t/05_maketext.t
 t/90_formfu.t
-t/99_pod-coverage.t
-t/99_pod.t
 t/lib/Test/Data/Localize.pm
 t/lib/Test/Data/Localize/AltNamespace/ja.pm
 t/lib/Test/Data/Localize/Gettext/ja.po
 t/lib/Test/Data/Localize/Namespace/en.pm
 t/lib/Test/Data/Localize/Namespace/ja.pm
 tools/benchmark/benchmark.pl
+xt/99_pod-coverage.t
+xt/99_pod.t

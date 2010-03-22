@@ -1,9 +1,8 @@
 
 package Data::Localize::Gettext;
 use utf8;
-use Encode ();
 use Any::Moose;
-use Any::Moose 'X::AttributeHelpers';
+use Data::Localize::Gettext::Parser;
 use File::Basename ();
 use File::Spec;
 use File::Temp qw(tempdir);
@@ -15,26 +14,16 @@ has 'encoding' => (
     is => 'rw',
     isa => 'Str',
     default => 'utf-8',
-    lazy => 1,
 );
 
 has 'paths' => (
-    metaclass => 'Collection::Array',
     is => 'rw',
     isa => 'ArrayRef',
     trigger => sub {
         my $self = shift;
-        $self->load_from_path($_) for @{$_[0]}
+        $self->load_from_path($_) for @{$_[0]};
     },
-    provides => {
-        unshift => 'path_add',
-    }
 );
-
-after 'path_add' => sub {
-    my $self = shift;
-    $self->load_from_path($_) for @{ $self->paths };
-};
 
 has 'storage_class' => (
     is => 'rw',
@@ -51,14 +40,21 @@ has 'storage_args' => (
 );
 
 has 'lexicon_map' => (
-    metaclass => 'Collection::Hash',
     is => 'rw',
     isa => 'HashRef[Data::Localize::Storage]',
     default => sub { +{} },
-    provides => {
-        get => 'lexicon_map_get',
-        set => 'lexicon_map_set'
-    }
+);
+
+has 'use_fuzzy' => (
+    is => 'ro',
+    isa => 'Bool',
+    default => 0,
+);
+
+has 'allow_empty' => (
+    is => 'ro',
+    isa => 'Bool',
+    default => 0,
 );
 
 __PACKAGE__->meta->make_immutable;
@@ -74,6 +70,22 @@ sub BUILDARGS {
         push @{$args{paths}}, $path;
     }
     $class->SUPER::BUILDARGS(%args, style => 'gettext');
+}
+
+sub path_add {
+    my $self = shift;
+    push @{$self->{paths}}, @_;
+    $self->load_from_path($_) for @_;
+}
+
+sub lexicon_map_get {
+    my ($self, $key) = @_;
+    return $self->lexicon_map->{ $key };
+}
+
+sub lexicon_map_set {
+    my ($self, $key, $value) = @_;
+    return $self->lexicon_map->{ $key } = $value;
 }
 
 sub register {
@@ -103,89 +115,24 @@ sub load_from_file {
         print STDERR "[Data::Localize::Gettext]: load_from_file - loading from file $file\n"
     }
 
-    my %lexicon;
-    open(my $fh, '<', $file) or die "Could not open $file: $!";
+    my $parser = Data::Localize::Gettext::Parser->new(
+        use_fuzzy  => $self->use_fuzzy(),
+        keep_empty => $self->allow_empty(),
+        encoding   => $self->encoding(),
+    );
 
-    # This stuff here taken out of Locale::Maketext::Lexicon, and
-    # modified by daisuke
-    my (%var, $key, @comments, @ret, @metadata);
-my $UseFuzzy = 0;
-my $KeepFuzzy = 0;
-my $AllowEmpty = 0;
-my @fuzzy;
-    my $process    = sub {
-        if ( length( $var{msgid} ) and length( $var{msgstr} ) and ( $UseFuzzy or !$var{fuzzy} ) ) {
-            $lexicon{ $var{msgid} } = $var{msgstr};
-        }
-        elsif ($AllowEmpty) {
-            $lexicon{ $var{msgid} } = '';
-        }
-        if ( defined $var{msgid} && $var{msgid} eq '' ) {
-            push @metadata, $self->parse_metadata( $var{msgstr} );
-        }
-        else {
-            push @comments, $var{msgid}, $var{msgcomment};
-        }
-        if ( $KeepFuzzy && $var{fuzzy} ) {
-            push @fuzzy, $var{msgid}, 1;
-        }
-        %var = ();
-    };
-
-    while (<$fh>) {
-        $_ = Encode::decode($self->encoding, $_, Encode::FB_CROAK());
-        s/[\015\012]*\z//;                  # fix CRLF issues
-
-        /^(msgid|msgstr) +"(.*)" *$/
-            ? do {                          # leading strings
-            $key = $1;
-            my $x = $2;
-            $x =~ s/\\(n|\\)/
-                $1 eq 'n' ? "\n" :
-                            "\\" /gex;
-            $var{$key} = $x;
-            }
-            :
-
-            /^"(.*)" *$/
-            ? do {                          # continued strings
-            $var{$key} .= $1;
-            }
-            :
-
-            /^# (.*)$/
-            ? do {                          # user comments
-            $var{msgcomment} .= $1 . "\n";
-            }
-            :
-
-            /^#, +(.*) *$/
-            ? do {                          # control variables
-            $var{$_} = 1 for split( /,\s+/, $1 );
-            }
-            :
-
-            /^ *$/ && %var
-            ? do {                          # interpolate string escapes
-            $process->($_);
-            }
-            : ();
-
-    }
-
-    # do not silently skip last entry
-    $process->() if keys %var != 0;
+    my $lexicon = $parser->parse_file($file);
 
     my $lang = File::Basename::basename($file);
     $lang =~ s/\.[mp]o$//;
 
     if (Data::Localize::DEBUG()) {
         print STDERR "[Data::Localize::Gettext]: load_from_file - registering ",
-            scalar keys %lexicon, " keys\n"
+            scalar keys %{$lexicon}, " keys\n"
     }
 
     # This needs to be merged
-    $self->lexicon_merge($lang, \%lexicon);
+    $self->lexicon_merge($lang, $lexicon);
 }
 
 sub format_string {
@@ -264,24 +211,6 @@ sub _build_storage {
         return $class->new();
     }
 }
-
-sub parse_metadata {
-    my $self = shift;
-    return map {
-              (/^([^\x00-\x1f\x80-\xff :=]+):\s*(.*)$/)
-            ? ( $1 eq 'Content-Type' )
-                ? do {
-                    my $enc = $2;
-                    if ( $enc =~ /\bcharset=\s*([-\w]+)/i ) {
-                        $self->encoding($1);
-                    }
-                    ( "__Content-Type", $enc );
-                }
-                : ( "__$1", $2 )
-            : ();
-    } split( /\r*\n+\r*/, $_[0]);
-}
-
 
 1;
 
