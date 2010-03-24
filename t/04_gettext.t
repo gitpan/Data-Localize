@@ -1,5 +1,4 @@
 use strict;
-use lib "t/lib";
 use utf8;
 use Test::More tests => 8;
 use File::Spec;
@@ -16,7 +15,7 @@ use_ok "Data::Localize::Gettext";
     is_deeply(
         $loc->paths,
         [ 't/04_gettext/*.po' ],
-        'paths contains single glob value in t/lib - BUILDARGS handles path argument correctly'
+        'paths contains single glob value in t/04_gettext/ - BUILDARGS handles path argument correctly'
     );
 
     my $out = $loc->localize_for(
@@ -55,17 +54,18 @@ EOM
 }
 
 {
-    my $class = Data::Localize::Gettext->meta->create_anon_class(
-        superclasses => [ 'Data::Localize::Gettext' ],
-        methods      => {
-            test => sub {
-                my ($self, $args, $embedded) = @_;
-                return join(':', @$args, @$embedded);
+    require Data::Localize::Format::Gettext;
+    my $loc = Data::Localize::Gettext->new(
+        path => 't/04_gettext/*.po',
+        formatter => Data::Localize::Format::Gettext->meta->create_anon_class(
+            superclasses => [ 'Data::Localize::Format::Gettext' ],
+            methods      => {
+                test => sub {
+                    my ($self, $args, $embedded) = @_;
+                    return join(':', @$args, @$embedded);
+                }
             }
-        }
-    );
-    my $loc = $class->name->new(
-        path => 't/04_gettext/*.po'
+        )->new_object()
     );
     my $out = $loc->localize_for(
         lang => 'ja',

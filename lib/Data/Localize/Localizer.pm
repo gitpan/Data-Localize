@@ -1,20 +1,37 @@
 
 package Data::Localize::Localizer;
 use utf8;
-use Any::Moose '::Role';
-use Any::Moose '::Util::TypeConstraints';
+use Any::Moose;
 use Carp ();
 
-requires 'register', 'get_lexicon';
-
-has 'style' => (
-    is => 'ro',
-    isa => enum([qw(gettext maketext)]),
-    default => 'maketext',
+has _localizer => (
+    is => 'rw',
+    isa => 'Data::Localize',
+    weak_ref => 1,
 );
 
-no Any::Moose '::Role';
-no Any::Moose '::Util::TypeConstraints';
+has formatter => (
+    is => 'ro',
+    isa => 'Data::Localize::Format',
+    required => 1,
+    lazy_build => 1,
+    handles => { format_string => 'format' },
+);
+
+no Any::Moose;
+
+sub _build_formatter {
+    Any::Moose::load_class('Data::Localize::Format::Maketext');
+    return Data::Localize::Format::Maketext->new();
+}
+
+sub register {
+    my ($self, $loc) = @_;
+    if ($self->_localizer) {
+        Carp::confess("Localizer $self is already attached to another Data::Localize object ($loc)");
+    }
+    $self->_localizer( $loc );
+}
 
 sub localize_for {
     my ($self, %args) = @_;
@@ -29,30 +46,7 @@ sub localize_for {
     return ();
 }
 
-sub format_string {
-    my ($self, $value, @args) = @_;
-
-    my $style = $self->style;
-    if ($style eq 'gettext') {
-        $value =~ s/%(\d+)/ defined $args[$1 - 1] ? $args[$1 - 1] : '' /ge;
-    } elsif ($style eq 'maketext') {
-        $value =~ s|\[([^\]]+)\]|
-            my @vars = split(/,/, $1);
-            my $method;
-            if ($vars[0] !~ /^_(-?\d+)$/) {
-                $method = shift @vars;
-            }
-
-
-            ($method) ?
-                $self->$method( map { (/^_(-?\d+)$/) ? $args[$1 - 1] : $_; } @args ) :
-                @args[ map { (/^_(-?\d+)$/ ? $1 : $_) - 1 } @vars ];
-        |gex;
-    } else {
-        Carp::confess("Unknown style: $style");
-    }
-    return $value;
-}
+__PACKAGE__->meta->make_immutable();
 
 1;
 
@@ -60,18 +54,23 @@ __END__
 
 =head1 NAME
 
-Data::Localize::Localizer - Localizer Role
+Data::Localize::Localizer - Localizer Base Class
 
 =head1 SYNOPSIS
 
     package MyLocalizer;
     use Moose;
 
-    with 'Data::Localize::Localizer';
+    extends 'Data::Localize::Localizer';
 
     no Moose;
 
 =head1 METHODS
+
+=head2 register
+
+Does basic registration for the localizer. If you're overriding
+this method, be sure to call the super class' register() method!
 
 =head2 localize_for
 

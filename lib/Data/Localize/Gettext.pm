@@ -4,21 +4,20 @@ use utf8;
 use Any::Moose;
 use Carp ();
 use Data::Localize::Gettext::Parser;
-use File::Basename ();
-use File::Spec;
-use File::Temp qw(tempdir);
+use File::Temp ();
 use Data::Localize::Util qw(_alias_and_deprecate);
 use Data::Localize::Storage::Hash;
 
-with 'Data::Localize::Localizer';
+extends 'Data::Localize::Localizer';
+with 'Data::Localize::Trait::WithStorage';
 
-has 'encoding' => (
+has encoding => (
     is => 'ro',
     isa => 'Str',
     default => 'utf-8',
 );
 
-has 'paths' => (
+has paths => (
     is => 'ro',
     isa => 'ArrayRef',
     trigger => sub {
@@ -27,39 +26,40 @@ has 'paths' => (
     },
 );
 
-has 'storage_class' => (
-    is => 'ro',
-    isa => 'Str',
-    default => sub {
-        return '+Data::Localize::Storage::Hash';
-    }
-);
-
-has 'storage_args' => (
-    is => 'ro',
-    isa => 'HashRef',
-    default => sub { +{} }
-);
-
-has 'lexicon_map' => (
-    is => 'ro',
-    isa => 'HashRef[Data::Localize::Storage]',
-    default => sub { +{} },
-);
-
-has 'use_fuzzy' => (
+has use_fuzzy => (
     is => 'ro',
     isa => 'Bool',
     default => 0,
 );
 
-has 'allow_empty' => (
+has allow_empty => (
     is => 'ro',
     isa => 'Bool',
     default => 0,
 );
+
+has _parser => (
+    is => 'ro',
+    isa => 'Data::Localize::Gettext::Parser',
+    lazy_build => 1,
+);
+
+override register => sub {
+    my ($self, $loc) = @_;
+    super();
+    $loc->add_localizer_map('*', $self);
+};
 
 no Any::Moose;
+
+sub _build__parser {
+    my $self = shift;
+    return Data::Localize::Gettext::Parser->new(
+        use_fuzzy  => $self->use_fuzzy(),
+        keep_empty => $self->allow_empty(),
+        encoding   => $self->encoding(),
+    );
+}
 
 sub BUILDARGS {
     my ($class, %args) = @_;
@@ -69,7 +69,12 @@ sub BUILDARGS {
         $args{paths} ||= [];
         push @{$args{paths}}, $path;
     }
-    $class->SUPER::BUILDARGS(%args, style => 'gettext');
+    $class->SUPER::BUILDARGS(%args);
+}
+
+sub _build_formatter {
+    Any::Moose::load_class( 'Data::Localize::Format::Gettext' );
+    return Data::Localize::Format::Gettext->new();
 }
 
 sub add_path {
@@ -86,11 +91,6 @@ sub get_lexicon_map {
 sub set_lexicon_map {
     my ($self, $key, $value) = @_;
     return $self->lexicon_map->{ $key } = $value;
-}
-
-sub register {
-    my ($self, $loc) = @_;
-    $loc->add_localizer_map('*', $self);
 }
 
 sub load_from_path {
@@ -114,13 +114,7 @@ sub load_from_file {
         print STDERR "[Data::Localize::Gettext]: load_from_file - loading from file $file\n"
     }
 
-    my $parser = Data::Localize::Gettext::Parser->new(
-        use_fuzzy  => $self->use_fuzzy(),
-        keep_empty => $self->allow_empty(),
-        encoding   => $self->encoding(),
-    );
-
-    my $lexicon = $parser->parse_file($file);
+    my $lexicon = $self->_parser->parse_file($file);
 
     my $lang = File::Basename::basename($file);
     $lang =~ s/\.[mp]o$//;
@@ -134,89 +128,7 @@ sub load_from_file {
     $self->merge_lexicon($lang, $lexicon);
 }
 
-sub format_string {
-    my ($self, $value, @args) = @_;
-    $value =~ s/%(\d+)/ defined $args[$1 - 1] ? $args[$1 - 1] : '' /ge;
-    $value =~ s/%(\w+)\(([^\)]+)\)/
-        $self->_method( $1, $2, \@args )
-    /gex;
-
-    return $value;
-}
-
-sub _method {
-    my ($self, $method, $embedded, $args) = @_;
-
-    my @embedded_args = split /,/, $embedded;
-    my $code = $self->can($method);
-    if (! $code) {
-        Carp::confess(blessed $self . " does not implement method $method");
-    }
-    return $code->($self, $args, \@embedded_args );
-}
-
-sub get_lexicon {
-    my ($self, $lang, $id) = @_;
-    my $lexicon = $self->get_lexicon_map($lang);
-    return () unless $lexicon;
-    $lexicon->get($id);
-}
-
-sub set_lexicon {
-    my ($self, $lang, $id, $value) = @_;
-    my $lexicon = $self->get_lexicon_map($lang);
-    if (! $lexicon) {
-        $lexicon = $self->build_storage();
-        $self->set_lexicon_map($lang, $lexicon);
-    }
-    $lexicon->set($id, $value);
-}
-
-sub merge_lexicon {
-    my ($self, $lang, $new_lexicon) = @_;
-
-    my $lexicon = $self->get_lexicon_map($lang);
-    if (! $lexicon) {
-        $lexicon = $self->_build_storage($lang);
-        $self->set_lexicon_map($lang, $lexicon);
-    }
-    while (my ($key, $value) = each %$new_lexicon) {
-        $lexicon->set($key, $value);
-    }
-}
-
-sub _build_storage {
-    my ($self, $lang) = @_;
-
-    my $class = $self->storage_class;
-    my $args  = $self->storage_args;
-    my %args;
-
-    if ($class !~ s/^\+//) {
-        $class = "Data::Localize::Storage::$class";
-    }
-    Any::Moose::load_class($class);
-
-    if ( $class->isa('Data::Localize::Storage::BerkeleyDB') ) {
-        my $dir  = ($args->{dir} ||= tempdir(CLEANUP => 1));
-        return $class->new(
-            bdb_class => 'Hash',
-            bdb_args  => {
-                -Filename => File::Spec->catfile($dir, $lang),
-                -Flags    => BerkeleyDB::DB_CREATE(),
-            }
-        );
-    } else {
-        return $class->new();
-    }
-}
-
 _alias_and_deprecate path_add => 'add_path';
-_alias_and_deprecate lexicon_map_get => 'get_lexicon_map';
-_alias_and_deprecate lexicon_map_set => 'set_lexicon_map';
-_alias_and_deprecate lexicon_get => 'get_lexicon';
-_alias_and_deprecate lexicon_set => 'set_lexicon';
-_alias_and_deprecate lexicon_merge => 'merge_lexicon';
 
 __PACKAGE__->meta->make_immutable;
 

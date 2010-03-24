@@ -26,11 +26,13 @@ recommends:
   Moose: 0
 requires:
   Any::Moose: 0
+  Encode: 0
   I18N::LangTags: 0
+  I18N::LangTags::Detect: 0
   Module::Pluggable::Object: 0
   Mouse: 0.19
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com//lestrrat/Data-Localize.git
-version: 0.00013
+version: 0.00013_01
