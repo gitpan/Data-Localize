@@ -5,7 +5,7 @@ use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 use 5.008;
 
-our $VERSION = '0.00013_01';
+our $VERSION = '0.00013_02';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -52,7 +52,7 @@ subtype 'Data::Localize::LocalizerListArg'
         ! grep { ! blessed $_ || ! $_->does('Data::Localize::Localizer') } @$_;
     }
     => message {
-        'localizers must be a list of Data::Localize::Localizer implementors'
+        'localizers must be a list of Data::Localize::Localizer implementers'
     }
 ;
 coerce 'Data::Localize::LocalizerListArg'
@@ -346,7 +346,7 @@ By default Data::Localize comes with a BerkeleyDB backend.
 =head2 STRUCTURE
 
 Data::Localize is a wrapper around various Data::Localize::Localizer 
-implementors (localizers). So if you don't specify any localizers, 
+implementers (localizers). So if you don't specify any localizers, 
 Data::Localize will do... nothing (unless you specify C<auto>).
 
 Localizers are the objects that do the actual localization. Localizers must
@@ -367,7 +367,7 @@ use it as the actual lexicon, if no other applicable lexicons exists.
 
 Locale::Maketext attaches this to the lexicon hash itself, but Data::Localizer
 differs in that it attaches to the Data::Localizer object itself, so you
-don't have to place _AUTO everwhere.
+don't have to place _AUTO everywhere.
 
     # here, we're deliberately not setting any localizers
     my $loc = Data::Localize->new(auto => 1);
@@ -497,7 +497,7 @@ current language set to the result of detect_languages().
 
 =head2 languages
 
-Getht the current list of languages
+Gets the current list of languages
 
 =head2 add_fallback_languages
 
@@ -517,10 +517,24 @@ Get appropriate localizer for language $lang
 
 Filter localizers
 
+=head1 PERFORMANCE
+
+Benchmark run with Mac OS X (10.5.8) perl 5.8.9 (MacPorts)
+
+  Running benchmarks with
+    Locale::Maketext: 1.13
+    Data::Localize:   0.00013_02
+  
+                       Rate   L::M D::L(Namespace) D::L(Gettext) D::L(Gettext+BDB)
+  L::M              11321/s     --            -34%          -44%              -45%
+  D::L(Namespace)   17241/s    52%              --          -15%              -16%
+  D::L(Gettext)     20270/s    79%             18%            --               -1%
+  D::L(Gettext+BDB) 20408/s    80%             18%            1%                --
+
+  
 =head1 TODO
 
 Gettext style localization files -- Make it possible to decode them
-Check performance -- see benchmark/benchmark.pl
 
 =head1 CONTRIBUTORS
 

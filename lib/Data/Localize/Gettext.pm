@@ -144,7 +144,7 @@ Data::Localize::Gettext - Acquire Lexicons From .po Files
 
 =head1 METHODS
 
-=head2 format_string($value, @args)
+=head2 format_string($lang, $value, @args)
 
 Formats the string
 
@@ -182,7 +182,7 @@ Loads lexicons from specified path. May contain glob()'able expressions.
 
 =head2 register
 
-Registeres this localizer
+Registers this localizer
 
 =head2 parse_metadata
 

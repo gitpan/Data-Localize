@@ -1,6 +1,6 @@
 use strict;
 use utf8;
-use Test::More tests => 8;
+use Test::More tests => 9;
 use File::Spec;
 use t::Data::Localize::Test qw(write_po);
 
@@ -61,8 +61,8 @@ EOM
             superclasses => [ 'Data::Localize::Format::Gettext' ],
             methods      => {
                 test => sub {
-                    my ($self, $args, $embedded) = @_;
-                    return join(':', @$args, @$embedded);
+                    my ($self, $lang, $args) = @_;
+                    return join(':', $lang, @$args);
                 }
             }
         )->new_object()
@@ -70,8 +70,14 @@ EOM
     my $out = $loc->localize_for(
         lang => 'ja',
         id   => 'Dynamically Create Me!',
-        args => [ '牧大輔' ],
     );
-    is($out, '牧大輔:a:b:cを動的に作成したぜ!', 'dynamic translation');
+    is($out, 'ja:a:b:cを動的に作成したぜ!', 'dynamic translation');
+
+    $out = $loc->localize_for(
+        lang => 'ja',
+        id   => 'Embedded Dynamic',
+        args => [ 42, 84 ],
+    );
+    is($out, 'ja:42:84を動的に作成したぜ!', 'dynamic translation');
 }
 
