@@ -35,4 +35,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com//lestrrat/Data-Localize.git
-version: 0.00013_02
+version: 0.00013_03
