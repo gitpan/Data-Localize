@@ -70,6 +70,8 @@ sub _rfetch {
     return unless $lexicon;
 
     my $thing = $lexicon->{$keys->[$i]};
+    return unless defined $thing;
+
     my $ref   = ref $thing;
     return unless $ref || length $thing;
 
@@ -148,6 +150,7 @@ Data::Localize::MultiLevel - Fetch Data From Multi-Level Data Structures
 
 Data::Localize::MultiLevel implements a "Rails"-ish I18N facility. Namely
 it uses a multi-level key to lookup data from a hash, and uses the NamedArgs
+formatter.
 
 =head1 METHODS
 

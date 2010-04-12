@@ -5,7 +5,7 @@ use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 use 5.008;
 
-our $VERSION = '0.00013_03';
+our $VERSION = '0.00013_04';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -264,6 +264,10 @@ sub add_localizer {
         Any::Moose::load_class($klass);
 
         $localizer = $klass->new(%args);
+    }
+
+    if (! $localizer || ! $localizer->isa( 'Data::Localize::Localizer' ) ) {
+        Carp::confess("Bad localizer: '" . ( defined $localizer ? $localizer : '(null)' ) . "'");
     }
 
     if (DEBUG()) {

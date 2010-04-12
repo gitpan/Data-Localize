@@ -45,6 +45,7 @@ t/08_multilevel.t
 t/08_multilevel/en.yml
 t/08_multilevel/ja.yml
 t/90_formfu.t
+t/99_bad_usage.t
 t/Data/Localize/Test.pm
 t/Data/Localize/Test/AltNamespace/ja.pm
 t/Data/Localize/Test/Namespace/en.pm
@@ -53,5 +54,7 @@ tools/benchmark/benchmark.pl
 tools/benchmark/gettext/en.po
 xt/01_moose.t
 xt/02_mouse.t
+xt/03_debug.t
 xt/99_pod-coverage.t
+xt/99_pod-spelling.t
 xt/99_pod.t
