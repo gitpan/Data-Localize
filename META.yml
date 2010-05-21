@@ -4,12 +4,10 @@ author:
   - 'Daisuke Maki C<< <daisuke@endeworks.jp> >>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
-  Test::More: 0.94
-  Test::Requires: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.95'
+generated_by: 'Module::Install version 0.97'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -36,4 +34,4 @@ requires:
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com//lestrrat/Data-Localize.git
-version: 0.00014
+version: 0.00015

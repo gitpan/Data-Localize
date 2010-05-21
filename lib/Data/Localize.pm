@@ -5,7 +5,7 @@ use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 use 5.008;
 
-our $VERSION = '0.00014';
+our $VERSION = '0.00015';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -193,6 +193,9 @@ sub localize {
             print STDERR "[Data::Localize]: localize - looking up $lang\n";
         }
         foreach my $localizer (@{$self->get_localizer_from_lang($lang) || []}) {
+            if (DEBUG()) {
+                print STDERR "[Data::Localize]: localize - trying with $localizer\n";
+            }
             my $out = $localizer->localize_for(
                 lang => $lang,
                 id => $key,
