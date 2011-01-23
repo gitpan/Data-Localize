@@ -44,6 +44,7 @@ t/07_gettext_parser.t
 t/08_multilevel.t
 t/08_multilevel/en.yml
 t/08_multilevel/ja.yml
+t/09_load_from_storage.t
 t/90_formfu.t
 t/99_bad_usage.t
 t/Data/Localize/Test.pm
@@ -51,6 +52,7 @@ t/Data/Localize/Test/AltNamespace/ja.pm
 t/Data/Localize/Test/Namespace/en.pm
 t/Data/Localize/Test/Namespace/ja.pm
 tools/benchmark/benchmark.pl
+tools/benchmark/en
 tools/benchmark/gettext/en.po
 xt/01_moose.t
 xt/02_mouse.t

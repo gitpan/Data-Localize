@@ -1,7 +1,15 @@
 package Data::Localize::Storage;
 use Any::Moose '::Role';
 
+has 'lang' => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1
+);
+
 requires qw(get set);
+
+sub is_volitile { 1 }
 
 no Any::Moose '::Role';
 

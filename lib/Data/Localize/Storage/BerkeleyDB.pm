@@ -4,6 +4,8 @@ use Any::Moose 'Util::TypeConstraints';
 use BerkeleyDB;
 use Carp ();
 use Encode ();
+use File::Spec ();
+use File::Temp ();
 
 with 'Data::Localize::Storage';
 
@@ -16,6 +18,14 @@ has '_db' => (
     init_arg => 'db',
 );
 
+has 'store_as_refs' => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 0
+);
+
+sub is_volitile { 0 }
+
 sub BUILD {
     my ($self, $args) = @_;
     if (! $self->_db) {
@@ -24,10 +34,22 @@ sub BUILD {
             $class = "BerkeleyDB::$class";
         }
         Any::Moose::load_class($class);
+
+        my $dir = ($args->{dir} ||= File::Temp::tempdir(CLEANUP => 1));
+        $args->{bdb_args} ||= {
+            -Filename => File::Spec->catfile($dir, $self->lang),
+            -Flags    => BerkeleyDB::DB_CREATE(),
+        };
+
         $self->_db( $class->new( $args->{bdb_args} || {} ) ||
             Carp::confess("Failed to create $class: $BerkeleyDB::Error")
         );
     }
+
+    if ( $self->store_as_refs ) {
+        require Storable;
+    }
+
     $self;
 }
 
@@ -36,14 +58,31 @@ sub get {
     my $value;
     my $rc = $self->_db->db_get($key, $value, $flags || 0);
     if ($rc == 0) {
-        # BerkeleyDB gives us values with the flags off, so put them back on
-        return Encode::decode_utf8($value);
+        if ( $self->store_as_refs ) {
+            # Storeable handles utf8 correctly
+            my $thawed = Storable::thaw( $value );
+            return $thawed->{'__' . __PACKAGE__ . '::key__'}
+                if exists $thawed->{'__' . __PACKAGE__ . '::key__'};
+            return $thawed;
+        }
+        else {
+            # BerkeleyDB gives us values with the flags off, so put them back on
+            return Encode::decode_utf8($value);
+        }
     }
     return ();
 }
 
 sub set {
     my ($self, $key, $value, $flags) = @_;
+
+    if ( $self->store_as_refs ) {
+        unless ( ref $value ) {
+            $value = { ('__' . __PACKAGE__ . '::key__') => $value };
+        }
+        $value = Storable::freeze( $value );
+    }
+
     my $rc = $self->_db->db_put($key, $value, $flags || 0);
     if ($rc != 0) {
         Carp::confess("Failed to set value $key");
