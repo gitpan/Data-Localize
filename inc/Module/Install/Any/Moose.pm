@@ -21,7 +21,8 @@ sub requires_any_moose {
         ($module, %args) = @_;
     }
 
-    my $prefer = ($args{prefer} ||= 'Mouse');
+    $args{prefer} ||= $ENV{ANY_MOOSE} || 'Mouse';
+    my $prefer = $args{prefer};
 
     my $requires = $self->requires;
     if (! grep { $_->[0] eq 'Any::Moose' } @$requires ) {
@@ -57,7 +58,7 @@ sub _any_moose_setup {
 
         if ($@) {
             print "missing\n";
-            my $y_n = ExtUtils::MakeMaker::prompt("  Add $module to the prerequisites?", 'n');
+            my $y_n = $self->prompt("  Add $module to the prerequisites?", 'n');
             if ($y_n =~ /^y(?:es)?$/i) {
                 $self->requires($module, $version);
             } else {
@@ -74,4 +75,4 @@ sub _any_moose_setup {
 
 __END__
 
-#line 143
+#line 144
