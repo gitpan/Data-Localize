@@ -41,7 +41,6 @@ $loc_gettext_bdb->add_localizer(
         dir => 'tools/benchmark'
     }
 );
-$loc_gettext_bdb->languages(['en']);
 
 print "Running benchmarks with\n",
     "  Locale::Maketext: ", $Locale::Maketext::VERSION, "\n",
@@ -53,12 +52,15 @@ cmpthese(30_000, {
         $handle->maketext('Hello, [_1]', 'John Doe');
     },
     'D::L(Namespace)' => sub {
+        $loc->languages(['en']);
         $loc->localize('Hello, [_1]', 'John Doe');
     },
     'D::L(Gettext)' => sub {
+        $loc_gettext->languages(['en']);
         $loc_gettext->localize('Hello, [_1]', 'John Doe');
     },
     'D::L(Gettext+BDB)' => sub {
+        $loc_gettext_bdb->languages(['en']);
         $loc_gettext_bdb->localize('Hello, [_1]', 'John Doe');
     },
 });
