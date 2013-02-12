@@ -6,7 +6,7 @@ use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 use 5.008;
 
-our $VERSION = '0.00023';
+our $VERSION = '0.00024';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
@@ -29,17 +29,23 @@ has auto => (
 );
 
 has auto_localizer => (
-    is => 'lazy',
+    is => 'rw',
+    lazy => 1,
+    builder => "_build_auto_localizer",
     isa => sub { $_[0]->isa('Data::Localize::Auto') },
 );
 
 has _languages => (
-    is => 'lazy',
+    is => 'rw',
+    lazy => 1,
+    builder => "_build__languages",
     init_arg => 'languages',
 );
 
 has _fallback_languages => (
-    is => 'lazy',
+    is => 'rw',
+    lazy => 1,
+    builder => "_build__fallback_languages",
     init_arg => 'languages',
 );
 
