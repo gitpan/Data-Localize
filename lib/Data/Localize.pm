@@ -1,95 +1,81 @@
 package Data::Localize;
-use Any::Moose;
-use Any::Moose '::Util::TypeConstraints';
+use Moo;
+use Module::Load ();
 use Scalar::Util ();
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 use 5.008;
 
-our $VERSION = '0.00022';
+our $VERSION = '0.00023';
 our $AUTHORITY = 'cpan:DMAKI';
 
 BEGIN {
     if (! defined &DEBUG) {
-        if ($ENV{DATA_LOCALIZE_DEBUG}) {
-            *DEBUG = sub () { 1 };
-        } else {
-            *DEBUG = sub () { 0 };
-        }
+        require constant;
+        constant->import(DEBUG => !!$ENV{DATA_LOCALIZE_DEBUG});
+    }
+}
+
+BEGIN {
+    if (DEBUG) {
+        require Data::Localize::Log;
+        Data::Localize::Log->import;
     }
 }
 
 has auto => (
     is => 'rw',
-    isa => 'Bool',
-    default => 1,
+    default => sub { 1 },
 );
 
 has auto_localizer => (
-    is => 'ro',
-    isa => 'Data::Localize::Auto',
-    lazy_build => 1,
+    is => 'lazy',
+    isa => sub { $_[0]->isa('Data::Localize::Auto') },
 );
 
 has _languages => (
-    is => 'rw',
-    isa => 'ArrayRef',
-    lazy_build => 1,
+    is => 'lazy',
     init_arg => 'languages',
 );
 
 has _fallback_languages => (
-    is => 'rw',
-    isa => 'ArrayRef',
-    lazy_build => 1,
+    is => 'lazy',
     init_arg => 'languages',
 );
 
-# Localizers are the actual minions that perform the localization.
-# They must register themselves
-subtype 'Data::Localize::LocalizerListArg'
-    => as 'ArrayRef'
-    => where {
-        ! grep { ! blessed $_ || ! $_->isa('Data::Localize::Localizer') } @$_;
-    }
-    => message {
-        'localizers must be a list of Data::Localize::Localizer implementers'
-    }
-;
-coerce 'Data::Localize::LocalizerListArg'
-    => from 'ArrayRef[HashRef]'
-    => via {
-        my $ret = [ map {
-            my $args  = $_;
+has _localizers => (
+    is => 'rw',
+    coerce => sub {
+        if (ref $_[0] ne 'ARRAY') {
+            Carp::croak("localizer list must be a list of Localizer objects");
+        }
+
+        # XXX Want to deprecate this auto-instantiation
+        foreach my $args (@{$_[0]}) {
+            if (Scalar::Util::blessed($args)) {
+                next;
+            }
+
             my $klass = delete $args->{class};
+            if (! $klass) {
+                Carp::croak("No class provided for localizer list");
+            }
             if ($klass !~ s/^\+//) {
                 $klass = "Data::Localize::$klass";
             }
-            Any::Moose::load_class($klass);
-            $klass->new(%$args);
-        } @$_ ];
-        return $ret;
-    }
-;
-
-has _localizers => (
-    is => 'rw',
-    isa => 'Data::Localize::LocalizerListArg',
-    coerce => 1,
+            Module::Load::load($klass);
+            $args = $klass->new(%$args);
+        }
+        $_[0];
+    },
     default => sub { +[] },
     init_arg => 'localizers',
 );
 
 has localizer_map => (
     is => 'ro',
-    isa => 'HashRef',
     default => sub { +{} },
 );
-
-__PACKAGE__->meta->make_immutable;
-
-no Any::Moose;
-no Any::Moose '::Util::TypeConstraints';
 
 sub BUILD {
     my $self = shift;
@@ -168,8 +154,9 @@ sub detect_languages {
         I18N::LangTags::Detect::detect() ||
         $self->fallback_languages,
     );
-    if (DEBUG()) {
-        print STDERR "[Data::Localize]: detect_languages auto-detected ", join(", ", map { "'$_'" } @lang ), "\n";
+    if (DEBUG) {
+        local $Log::Minimal::AUTODUMP = 1;
+        debugf("detect_languages: auto-detected %s", \@lang);;
     }
     return wantarray ? @lang : \@lang;
 }
@@ -180,8 +167,9 @@ sub detect_languages_from_header {
         I18N::LangTags::Detect->http_accept_langs( $_[0] || $ENV{HTTP_ACCEPT_LANGUAGE}),
         $self->fallback_languages,
     );
-    if (DEBUG()) {
-        print STDERR "[Data::Localize]: detect_languages_from_header detected ", join(", ", map { "'$_'" } @lang ), "\n";
+    if (DEBUG) {
+        local $Log::Minimal::AUTODUMP = 1;
+        debugf("detect_languages_from_header detected %s", \@lang);
     }
     return wantarray ? @lang : \@lang;
 }
@@ -189,16 +177,28 @@ sub detect_languages_from_header {
 sub localize {
     my ($self, $key, @args) = @_;
 
-    if (DEBUG()) {
-        print STDERR "[Data::Localize]: localize - looking up $key\n";
+    if (DEBUG) {
+        debugf("localize - Looking up key '%s'", $key);
     }
-    foreach my $lang ($self->languages) {
-        if (DEBUG()) {
-            print STDERR "[Data::Localize]: localize - attempting language $lang\n";
+    my @languages = $self->languages ;
+    if (DEBUG) {
+        local $Log::Minimal::AUTODUMP = 1;
+        debugf("localize - Loaded languages %s", \@languages);
+    }
+    foreach my $lang (@languages) {
+        if (DEBUG) {
+            debugf("localize - Attempting language '%s'", $lang);
         }
-        foreach my $localizer (@{$self->get_localizer_from_lang($lang) || []}) {
-            if (DEBUG()) {
-                print STDERR "[Data::Localize]: localize - trying with $localizer\n";
+        my $localizers = $self->get_localizer_from_lang($lang) || [];
+        if (DEBUG) {
+            debugf("localize - Loaded %d localizers for lang %s",
+                scalar @$localizers,
+                $lang
+            );
+        }
+        foreach my $localizer (@$localizers) {
+            if (DEBUG) {
+                debugf("localize - Trying with %s", $localizer);
             }
             my $out = $localizer->localize_for(
                 lang => $lang,
@@ -207,24 +207,27 @@ sub localize {
             );
 
             if ($out) {
-                if (DEBUG()) {
-                    print STDERR "[Data::Localize]: got localization: $out\n";
+                if (DEBUG) {
+                    debugf("localize - Got localization: '%s'", $out);
                 }
                 return $out;
             }
         }
     }
 
-    if (DEBUG()) {
-        print STDERR "[Data::Localize]: localize - nothing found in registered languages\n";
+    if (DEBUG) {
+        debugf("localize - nothing found in registered languages");
     }
 
     # if we got here, we missed on all languages.
     # one last shot. try the '*' slot
     foreach my $localizer (@{$self->get_localizer_from_lang('*') || []}) {
         foreach my $lang ($self->languages) {
-            if (DEBUG()) {
-                print STDERR "[Data::Localize]: localize - trying $lang for '*' with localizer $localizer\n";
+            if (DEBUG) {
+                debugf("localize - trying %s for '*' with localizer %s",
+                    $lang,
+                    $localizer
+                );
             }
             my $out = $localizer->localize_for(
                 lang => $lang,
@@ -232,8 +235,8 @@ sub localize {
                 args => \@args
             );
             if ($out) {
-                if (DEBUG()) {
-                    print STDERR "[Data::Localize]: localize - found for $lang, adding to map\n";
+                if (DEBUG) {
+                    debugf("localize - found for %s, adding to map", $lang);
                 }
 
                 # oh, found one? set it in the localizer map so we don't have
@@ -247,8 +250,8 @@ sub localize {
     # if you got here, and you /still/ can't find a proper localization,
     # then we fallback to 'auto' feature
     if ($self->auto) {
-        if (DEBUG()) {
-            print STDERR "[Data::Localize]: localize - trying auto-lexicon for $key\n";
+        if (DEBUG) {
+            debugf("localize - trying auto-lexicon for '%s'", $key);
         }
         return $self->auto_localizer->localize_for(id => $key, args => \@args);
     }
@@ -268,8 +271,7 @@ sub add_localizer {
         if ($klass !~ s/^\+//) {
             $klass = "Data::Localize::$klass";
         }
-        Any::Moose::load_class($klass);
-
+        Module::Load::load($klass);
         $localizer = $klass->new(%args);
     }
 
@@ -278,7 +280,7 @@ sub add_localizer {
     }
 
     if (DEBUG()) {
-        print STDERR "[Data::Localize]: add_localizer $localizer\n";
+        debugf("add_localizer: %s", $localizer);
     }
     $localizer->register($self);
     push @{ $self->_localizers }, $localizer;
@@ -295,8 +297,8 @@ sub find_localizers {
 sub add_localizer_map {
     my ($self, $lang, $localizer) = @_;
 
-    if (DEBUG()) {
-        print STDERR "[Data::Localize]: add_localizer_map $lang -> $localizer\n";
+    if (DEBUG) {
+        debugf("add_localizer_map %s -> %s", $lang, $localizer);
     }
     my $list = $self->get_localizer_from_lang($lang);
     if (! $list) {
@@ -549,32 +551,35 @@ tl;dr: Use one that fits your needs
 =head2 Using explicit get_handle for every request
 
 This benchmark assumes that you're fetching the lexicon anew for
-every request.
+every request. This allows you to switch languages for every request
 
-Benchmark run with Mac OS X (10.5.8) perl 5.8.9 (MacPorts)
+Benchmark run with Mac OS X (10.8.2) perl 5.16.1
 
   Running benchmarks with
-    Locale::Maketext: 1.19
-    Data::Localize:   0.00021
-                       Rate D::L(Namespace)   L::M D::L(Gettext+BDB) D::L(Gettext)
-  D::L(Namespace)    6818/s              --   -41%              -75%          -75%
-  L::M              11494/s             69%     --              -57%          -57%
-  D::L(Gettext+BDB) 27027/s            296%   135%                --            0%
-  D::L(Gettext)     27027/s            296%   135%                0%            --
+    Locale::Maketext: 1.23
+    Data::Localize:   0.00023
+                       Rate D::L(Namespace)   L::M D::L(Gettext) D::L(Gettext+BDB)
+  D::L(Namespace)    5051/s              --   -65%          -73%              -73%
+  L::M              14423/s            186%     --          -24%              -24%
+  D::L(Gettext)     18868/s            274%    31%            --               -1%
+  D::L(Gettext+BDB) 18987/s            276%    32%            1%                --
 
 =head2 Using cached lexicon objects for all
 
 This benchmark assumes that you're fetching the lexicon once for
-a particular language, and you keep it in memory for reuse
+a particular language, and you keep it in memory for reuse.
+This does NOT allow you to switch languages for every request.
+
+Benchmark run with Mac OS X (10.8.2) perl 5.16.1
 
   Running benchmarks with
-    Locale::Maketext: 1.19
-    Data::Localize:   0.00021
-                       Rate D::L(Namespace) D::L(Gettext+BDB) D::L(Gettext)   L::M
-  D::L(Namespace)    3636/s              --              -68%          -74%   -95%
-  D::L(Gettext+BDB) 11538/s            217%                --          -16%   -84%
-  D::L(Gettext)     13761/s            278%               19%            --   -81%
-  L::M              71429/s           1864%              519%          419%     --
+    Locale::Maketext: 1.23
+    Data::Localize:   0.00023
+                        Rate D::L(Namespace) D::L(Gettext+BDB) D::L(Gettext)  L::M
+  D::L(Namespace)     6023/s              --              -65%          -69%  -96%
+  D::L(Gettext+BDB)  17202/s            186%                --          -12%  -87%
+  D::L(Gettext)      19548/s            225%               14%            --  -86%
+  L::M              135993/s           2158%              691%          596%    --
 
 =head1 TODO
 

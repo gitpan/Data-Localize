@@ -3,11 +3,14 @@ abstract: 'Alternate Data Localization API'
 author:
   - 'Daisuke Maki C<< <daisuke@endeworks.jp> >>'
 build_requires:
-  ExtUtils::MakeMaker: 6.42
+  ExtUtils::MakeMaker: 6.59
+  Test::More: 0.94
+  Test::Requires: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.42
+  ExtUtils::MakeMaker: 6.59
 distribution_type: module
-generated_by: 'Module::Install version 1.01'
+dynamic_config: 1
+generated_by: 'Module::Install version 1.06'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -22,16 +25,16 @@ no_index:
 recommends:
   BerkeleyDB: 0
   Config::Any: 0
-  Moose: 0
 requires:
-  Any::Moose: 0
   Encode: 0
   I18N::LangTags: 0
   I18N::LangTags::Detect: 0
+  Log::Minimal: 0.14
+  Module::Load: 0
   Module::Pluggable::Object: 0
-  Mouse: 0.19
+  Moo: 1.000008
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
-  repository: git://github.com//lestrrat/Data-Localize.git
-version: 0.00022
+  repository: git://github.com/lestrrat/Data-Localize.git
+version: 0.00023
