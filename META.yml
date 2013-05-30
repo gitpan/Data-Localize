@@ -33,8 +33,9 @@ requires:
   Module::Load: 0
   Module::Pluggable::Object: 0
   Moo: 1.000008
+  MooX::Types::MooseLike::Base: 0
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/mit-license.php
   repository: git://github.com/lestrrat/Data-Localize.git
-version: 0.00024
+version: 0.00025
