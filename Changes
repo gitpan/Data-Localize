@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.00026 2014-07-01T03:45:18Z
+  * Work with perl 5.20 and up (Karl Williamson)
+  * Changed to use Minilla
+
 0.00025 May 30 2013
   * Various fixes for rt #83582
 
