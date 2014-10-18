@@ -9,6 +9,7 @@ requires 'MooX::Types::MooseLike::Base';
 requires 'perl', '5.008';
 recommends 'BerkeleyDB';
 recommends 'Config::Any';
+recommends 'YAML::XS';
 
 on build => sub {
     requires 'ExtUtils::MakeMaker', '6.59';

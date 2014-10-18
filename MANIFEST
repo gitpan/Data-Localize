@@ -22,6 +22,7 @@ lib/Data/Localize/Storage/BerkeleyDB.pm
 lib/Data/Localize/Storage/Hash.pm
 lib/Data/Localize/Trait/WithStorage.pm
 lib/Data/Localize/Util.pm
+minil.toml
 t/01_basic.t
 t/02_namespace.t
 t/03_auto.t
